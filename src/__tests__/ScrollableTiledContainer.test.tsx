@@ -14,7 +14,11 @@ vi.mock('../ScrollableTiledPane', () => ({
   )
 }));
 
-const makePane = (id: string, label: string, onOpen?: (open: any) => void): PaneData => ({
+const makePane = (
+  id: string,
+  label: string,
+  onOpen?: (open: (next: PaneData) => void) => void
+): PaneData => ({
   id,
   element: ({ openPane }) => (
     <button data-testid={`btn-${id}`} onClick={() => onOpen?.(openPane)}>
