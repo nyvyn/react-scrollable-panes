@@ -20,14 +20,14 @@ const trackStyle: CSSProperties = {
 
 interface Props {
     initial: ScrollableTiledPaneData[];
-    width: number; // px
+    minWidth: number;           // minimum width for a single pane (px)
 }
 
 ScrollableTiledContainer.displayName = "ScrollableTiledContainer";
 
 export function ScrollableTiledContainer({
     initial,
-    width,
+    minWidth,
 }: Props): ReactNode {
     const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
     const [viewportRef, bounds] = useMeasure();   // gives us bounds.width
@@ -52,8 +52,15 @@ export function ScrollableTiledContainer({
 
     const [first, ...rest] = panes;
 
-    const renderPane = (p: ScrollableTiledPaneData) => (
-        <ScrollableTiledPane key={p.id} width={width}>
+    const paneWidth =
+        bounds.width && panes.length * minWidth <= bounds.width
+            ? Math.floor(bounds.width / panes.length)
+            : minWidth;
+
+    const offset = Math.max(0, minWidth * panes.length - bounds.width);
+
+    const renderPane = (p: ScrollableTiledPaneData, extraStyle?: CSSProperties) => (
+        <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
             {typeof p.element === "function"
                 ? (p.element as ScrollableTiledPaneRenderer)({openPane})
                 : p.element}
@@ -73,14 +80,12 @@ export function ScrollableTiledContainer({
 
     return (
         <div ref={viewportRef} style={viewportStyle}>
-            {first && (
-                renderPane(first)
-            )}
+            {first && renderPane(first, offset > 0 ? { position: 'absolute' } : undefined)}
             <div
                 data-testid="track"
-                style={{ ...trackStyle, left: width, ...slideStyle }}
+                style={{ ...trackStyle, left: paneWidth, ...slideStyle }}
             >
-                {rest.map(renderPane)}
+                {rest.map(p => renderPane(p))}
             </div>
         </div>
     );
