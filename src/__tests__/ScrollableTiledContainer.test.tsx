@@ -1,13 +1,14 @@
 import '../../tests/helpers/mockUseMeasure';      // ← registers the react-use-measure mock
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ReactNode } from "react";
 import { ScrollableTiledContainer } from '../ScrollableTiledContainer';
 
 import type { ScrollableTiledPaneData } from '../ScrollableTiledPane';
 
 type OpenPane = (next: ScrollableTiledPaneData) => void;
 
-const makeOpenerPane = (id: string, nextId: string, nextElement: React.ReactNode) => ({
+const makeOpenerPane = (id: string, nextId: string, nextElement: ReactNode) => ({
   id,
   element: ({ openPane }: { openPane: OpenPane }) => (
     <button onClick={() => openPane({ id: nextId, element: nextElement })}>
@@ -18,19 +19,19 @@ const makeOpenerPane = (id: string, nextId: string, nextElement: React.ReactNode
 
 it('appends a new pane and recalculates pane widths', async () => {
   const user = userEvent.setup();
-  const minWidth = 200;
+  const width = 400;
 
   // 1️⃣  one opener pane that can add pane “B”
   const initial = [
     makeOpenerPane('A', 'B', <span>B-content</span>),
   ];
 
-  render(<ScrollableTiledContainer initial={initial} minWidth={minWidth} />);
+  render(<ScrollableTiledContainer initial={initial} width={width} />);
 
   // → initially exactly one .pane with full width (= 800 px from mock)
   let panes = screen.getAllByTestId('pane');
   expect(panes).toHaveLength(1);
-  expect(panes[0]).toHaveStyle({ width: '800px' });
+  expect(panes[0]).toHaveStyle({ width: '400px' });
 
   // 2️⃣  click button inside first pane to open B
   await user.click(screen.getByRole('button', { name: /open B/i }));
@@ -63,7 +64,7 @@ it('slides panes over the first when width is limited', async () => {
     },
   ];
 
-  render(<ScrollableTiledContainer initial={initial} minWidth={minWidth} />);
+  render(<ScrollableTiledContainer initial={initial} width={minWidth} />);
 
   await user.click(screen.getByRole('button', { name: /open B/i }));
   await user.click(screen.getByRole('button', { name: /open C/i }));

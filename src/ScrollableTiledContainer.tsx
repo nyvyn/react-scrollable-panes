@@ -1,4 +1,4 @@
-import { CSSProperties, ReactNode, useCallback, useState } from "react";
+import { CSSProperties, ReactNode, useCallback, useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
 
@@ -20,17 +20,21 @@ const trackStyle: CSSProperties = {
 
 interface Props {
     initial: ScrollableTiledPaneData[];
-    minWidth: number;           // minimum width for a single pane (px)
+    width: number;           // minimum width for a single pane (px)
 }
 
 ScrollableTiledContainer.displayName = "ScrollableTiledContainer";
 
 export function ScrollableTiledContainer({
     initial,
-    minWidth,
+    width,
 }: Props): ReactNode {
     const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
     const [viewportRef, bounds] = useMeasure();   // gives us bounds.width
+
+    useEffect(() => {
+        setPanes(initial);
+    }, [initial]);
 
     /**
      *  Passed to every pane renderer so it can request navigation.
@@ -49,15 +53,10 @@ export function ScrollableTiledContainer({
 
     const [first, ...rest] = panes;
 
-    const paneWidth =
-        bounds.width && panes.length * minWidth <= bounds.width
-            ? Math.floor(bounds.width / panes.length)
-            : minWidth;
-
-    const offset = Math.max(0, minWidth * panes.length - bounds.width);
+    const offset = Math.max(0, width * panes.length - bounds.width);
 
     const renderPane = (p: ScrollableTiledPaneData, extraStyle?: CSSProperties) => (
-        <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
+        <ScrollableTiledPane key={p.id} width={width} style={extraStyle}>
             {typeof p.element === "function"
                 ? (p.element as ScrollableTiledPaneRenderer)({openPane})
                 : p.element}
@@ -70,17 +69,17 @@ export function ScrollableTiledContainer({
 
         // add animation helpers only when we are actually sliding
         ...(offset > 0 && {
-            transition: 'transform 300ms ease-out',
-            willChange: 'transform',
+            transition: "transform 300ms ease-out",
+            willChange: "transform",
         }),
     };
 
     return (
         <div ref={viewportRef} style={viewportStyle}>
-            {first && renderPane(first, offset > 0 ? { position: 'absolute' } : undefined)}
+            {first && renderPane(first, offset > 0 ? {position: "absolute"} : undefined)}
             <div
                 data-testid="track"
-                style={{ ...trackStyle, left: paneWidth, ...slideStyle }}
+                style={{...trackStyle, left: width, ...slideStyle}}
             >
                 {rest.map(p => renderPane(p))}
             </div>
