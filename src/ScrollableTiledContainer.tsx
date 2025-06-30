@@ -3,11 +3,12 @@ import useMeasure from "react-use-measure";
 import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
 
 const viewportStyle: CSSProperties = {
-    display: "flex",
-    flex: "1",
-    overflowX: "hidden",
-    overflowY: "hidden",
-    border: "1px solid yellow",
+  display: "flex",
+  flex: "1",
+  overflowX: "hidden",
+  overflowY: "hidden",
+  border: "1px solid yellow",
+  position: "relative",
 };
 
 const trackStyle: CSSProperties = {
@@ -54,25 +55,42 @@ export function ScrollableTiledContainer({
         : minWidth;
 
     const totalWidth = paneWidth * panes.length;
-    const offset = Math.max(0, totalWidth - bounds.width);   // px to slide left
+    const offset = Math.max(0, totalWidth - bounds.width); // px to slide left
+
+    const [first, ...rest] = panes;
+    const slide = offset > 0 && rest.length > 0;
+
+    const renderPane = (p: ScrollableTiledPaneData) => (
+      <ScrollableTiledPane key={p.id} width={paneWidth}>
+        {typeof p.element === "function"
+          ? (p.element as ScrollableTiledPaneRenderer)({ openPane })
+          : p.element}
+      </ScrollableTiledPane>
+    );
 
     return (
-        <div ref={viewportRef} style={viewportStyle}>
-            <div
-              style={{
-                ...trackStyle,
-                transform: `translateX(-${offset}px)`,
-                transition: "transform 0.3s ease-out",
-              }}
-            >
-                {panes.map((p) => (
-                  <ScrollableTiledPane key={p.id} width={paneWidth}>
-                    {typeof p.element === "function"
-                      ? (p.element as ScrollableTiledPaneRenderer)({ openPane })
-                      : p.element}
-                  </ScrollableTiledPane>
-                ))}
-            </div>
+      <div ref={viewportRef} style={viewportStyle}>
+        {slide && (
+          <ScrollableTiledPane
+            width={paneWidth}
+            style={{ position: "absolute", left: 0, top: 0, zIndex: 1 }}
+          >
+            {typeof first.element === "function"
+              ? (first.element as ScrollableTiledPaneRenderer)({ openPane })
+              : first.element}
+          </ScrollableTiledPane>
+        )}
+        <div
+          data-testid="track"
+          style={{
+            ...trackStyle,
+            marginLeft: slide ? paneWidth : 0,
+            transform: `translateX(-${offset}px)`,
+            transition: "transform 0.3s ease-out",
+          }}
+        >
+          {(slide ? rest : panes).map(renderPane)}
         </div>
+      </div>
     );
 }

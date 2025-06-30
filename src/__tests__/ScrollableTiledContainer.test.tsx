@@ -39,3 +39,36 @@ it('appends a new pane and recalculates pane widths', async () => {
   // and the new pane’s content is rendered
   expect(screen.getByText('B-content')).toBeInTheDocument();
 });
+
+it('slides panes over the first when width is limited', async () => {
+  const user = userEvent.setup();
+  const minWidth = 300;
+
+  const paneC = { id: 'C', element: <span>C-content</span> };
+  const paneB = makeOpenerPane('B', 'C', <span>C-content</span>);
+  paneB.element = ({ openPane }: { openPane: any }) => (
+    <button onClick={() => openPane(paneC)}>open C</button>
+  );
+
+  const initial = [
+    {
+      id: 'A',
+      element: ({ openPane }: { openPane: any }) => (
+        <button onClick={() => openPane(paneB)}>open B</button>
+      ),
+    },
+  ];
+
+  render(<ScrollableTiledContainer initial={initial} minWidth={minWidth} />);
+
+  await user.click(screen.getByRole('button', { name: /open B/i }));
+  await user.click(screen.getByRole('button', { name: /open C/i }));
+
+  const panes = screen.getAllByTestId('pane');
+  expect(panes).toHaveLength(3);
+  panes.forEach((p) => expect(p).toHaveStyle({ width: '300px' }));
+  expect(panes[0]).toHaveStyle({ position: 'absolute' });
+
+  const track = screen.getByTestId('track');
+  expect(track).toHaveStyle({ transform: 'translateX(-100px)' });
+});
