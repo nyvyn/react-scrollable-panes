@@ -46,13 +46,8 @@ export function ScrollableTiledContainer({
         [],
     );
 
-    // Decide pane width:
-    // • If all panes fit at minWidth, spread them evenly.
-    // • Otherwise fall back to minWidth.
-    const paneWidth =
-      bounds.width && panes.length * minWidth <= bounds.width
-        ? Math.floor(bounds.width / panes.length)
-        : minWidth;
+    // Every pane keeps the explicit width we were asked to use.
+    const paneWidth = minWidth;
 
     const totalWidth = paneWidth * panes.length;
     const offset = Math.max(0, totalWidth - bounds.width); // px to slide left
