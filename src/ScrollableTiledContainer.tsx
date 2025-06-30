@@ -85,7 +85,7 @@ export function ScrollableTiledContainer({
                 data-testid="track"
                 style={{ ...trackStyle, left: paneWidth, ...slideStyle }}
             >
-                {rest.map(renderPane)}
+                {rest.map((pane) => renderPane(pane))}
             </div>
         </div>
     );
