@@ -7,7 +7,6 @@ const viewportStyle: CSSProperties = {
     flex: "1",
     width: "100%",
     overflow: "hidden",
-    border: "1px solid yellow",
     position: "relative",
 };
 
@@ -53,10 +52,12 @@ export function ScrollableTiledContainer({
 
     const [first, ...rest] = panes;
 
-    const offset = Math.max(0, width * panes.length - bounds.width);
+    const paneWidth = Math.min(width, bounds.width);
+
+    const offset = Math.max(0, paneWidth * panes.length - bounds.width);
 
     const renderPane = (p: ScrollableTiledPaneData, extraStyle?: CSSProperties) => (
-        <ScrollableTiledPane key={p.id} width={width} style={extraStyle}>
+        <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
             {typeof p.element === "function"
                 ? (p.element as ScrollableTiledPaneRenderer)({openPane})
                 : p.element}
@@ -69,8 +70,13 @@ export function ScrollableTiledContainer({
 
         // add animation helpers only when we are actually sliding
         ...(offset > 0 && {
-            transition: "transform 300ms ease-out",
-            willChange: "transform",
+            transition:
+                "box-shadow 100ms linear, opacity 75ms linear, " +
+                "transform 200ms cubic-bezier(0.19, 1, 0.22, 1)",
+            willChange: "transform, opacity, box-shadow",
+            opacity: 1,
+            // shadow on the left side whenever the track has been shifted
+            boxShadow: "0 0 15px 3px rgba(0,0,0,0.05)",
         }),
     };
 
