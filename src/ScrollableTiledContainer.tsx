@@ -74,7 +74,7 @@ export function ScrollableTiledContainer({
             transition: "transform 300ms ease-out",
             willChange: "transform",
             // shadow on the left side whenever the track has been shifted
-            boxShadow: "-8px 0 6px -6px rgba(0,0,0,0.30)",
+            boxShadow: "-12px 0 12px -6px rgba(0,0,0,0.05)",
         }),
     };
 
