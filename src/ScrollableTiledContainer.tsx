@@ -53,10 +53,12 @@ export function ScrollableTiledContainer({
 
     const [first, ...rest] = panes;
 
-    const offset = Math.max(0, width * panes.length - bounds.width);
+    const paneWidth = Math.min(width, bounds.width);
+
+    const offset = Math.max(0, paneWidth * panes.length - bounds.width);
 
     const renderPane = (p: ScrollableTiledPaneData, extraStyle?: CSSProperties) => (
-        <ScrollableTiledPane key={p.id} width={width} style={extraStyle}>
+        <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
             {typeof p.element === "function"
                 ? (p.element as ScrollableTiledPaneRenderer)({openPane})
                 : p.element}
