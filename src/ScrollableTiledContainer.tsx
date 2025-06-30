@@ -1,11 +1,11 @@
-import { CSSProperties, ReactNode, useCallback, useState, useEffect, useRef } from "react";
+import { CSSProperties, ReactNode, useCallback, useState } from "react";
 import useMeasure from "react-use-measure";
 import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
 
 const viewportStyle: CSSProperties = {
     display: "flex",
     flex: "1",
-    overflowX: "auto",
+    overflowX: "hidden",
     overflowY: "hidden",
     border: "1px solid yellow",
 };
@@ -28,15 +28,7 @@ export function ScrollableTiledContainer({
     minWidth,
 }: Props): ReactNode {
     const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
-    const viewportEl = useRef<HTMLDivElement | null>(null);
-    const [measureRef, bounds] = useMeasure();
-    const combinedRef = useCallback(
-      (node: HTMLDivElement | null) => {
-        measureRef(node);
-        viewportEl.current = node;
-      },
-      [measureRef],
-    );
+    const [viewportRef, bounds] = useMeasure();   // gives us bounds.width
 
     /**
      *  Passed to every pane renderer so it can request navigation.
@@ -54,19 +46,18 @@ export function ScrollableTiledContainer({
     );
 
     const paneWidth = minWidth;
-
-    // Auto-scroll to reveal the newest pane
-    useEffect(() => {
-      const el = viewportEl.current;
-      if (!el) return;
-      const maxOffset = el.scrollWidth - el.clientWidth;
-      if (maxOffset > 0)
-        el.scrollTo({ left: maxOffset, behavior: "smooth" });
-    }, [panes.length]);
+    const totalWidth = paneWidth * panes.length;
+    const offset = Math.max(0, totalWidth - bounds.width);   // px to slide left
 
     return (
-        <div ref={combinedRef} style={viewportStyle}>
-            <div style={trackStyle}>
+        <div ref={viewportRef} style={viewportStyle}>
+            <div
+              style={{
+                ...trackStyle,
+                transform: `translateX(-${offset}px)`,
+                transition: "transform 0.3s ease-out",
+              }}
+            >
                 {panes.map((p) => (
                   <ScrollableTiledPane key={p.id} width={paneWidth}>
                     {typeof p.element === "function"
