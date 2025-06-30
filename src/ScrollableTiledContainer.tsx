@@ -27,7 +27,7 @@ ScrollableTiledContainer.displayName = "ScrollableTiledContainer";
 
 export function ScrollableTiledContainer({
     initial,
-    width,
+    width: minWidth,
 }: Props): ReactNode {
     const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
     const [viewportRef, bounds] = useMeasure();   // gives us bounds.width
@@ -51,13 +51,21 @@ export function ScrollableTiledContainer({
         [],
     );
 
-    const totalWidth = width * panes.length;
+    const paneWidth =
+        bounds.width && panes.length * minWidth <= bounds.width
+            ? Math.floor(bounds.width / panes.length)
+            : minWidth;
+
+    const totalWidth = minWidth * panes.length;   // used only for slide maths
     const offset = Math.max(0, totalWidth - bounds.width); // px to slide left
 
     const [first, ...rest] = panes;
 
-    const renderPane = (p: ScrollableTiledPaneData) => (
-        <ScrollableTiledPane key={p.id} width={width}>
+    const renderPane = (
+        p: ScrollableTiledPaneData,
+        extraStyle: CSSProperties = {}
+    ) => (
+        <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
             {typeof p.element === "function"
                 ? (p.element as ScrollableTiledPaneRenderer)({openPane})
                 : p.element}
@@ -72,12 +80,10 @@ export function ScrollableTiledContainer({
 
     return (
         <div ref={viewportRef} style={viewportStyle}>
-            {first && (
-                renderPane(first)
-            )}
+            {first && renderPane(first, offset > 0 ? { position: 'absolute' } : undefined)}
             <div
                 data-testid="track"
-                style={{ ...trackStyle, left: width, ...slideStyle }}
+                style={{ ...trackStyle, left: paneWidth, ...slideStyle }}
             >
                 {rest.map(renderPane)}
             </div>
