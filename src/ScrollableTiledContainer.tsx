@@ -78,6 +78,15 @@ export function ScrollableTiledContainer({
         willChange: 'transform',
     };
 
+    // Auto-scroll to reveal the newest pane
+    useEffect(() => {
+      const el = viewportEl.current;
+      if (!el) return;
+      const maxOffset = el.scrollWidth - el.clientWidth;
+      if (maxOffset > 0)
+        el.scrollTo({ left: maxOffset, behavior: "smooth" });
+    }, [panes.length]);
+
     return (
         <div ref={viewportRef} style={viewportStyle}>
             {first && renderPane(first, offset > 0 ? { position: 'absolute' } : undefined)}
