@@ -7,7 +7,6 @@ const viewportStyle: CSSProperties = {
     flex: "1",
     width: "100%",
     overflow: "hidden",
-    border: "1px solid yellow",
     position: "relative",
 };
 
@@ -77,7 +76,7 @@ export function ScrollableTiledContainer({
             willChange: "transform, opacity, box-shadow",
             opacity: 1,
             // shadow on the left side whenever the track has been shifted
-            boxShadow: "-12px 0 12px -6px rgba(0,0,0,0.05)",
+            boxShadow: "0 0 15px 3px rgba(0,0,0,0.1)",
         }),
     };
 
