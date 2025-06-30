@@ -1,7 +1,26 @@
 import { CSSProperties, forwardRef, PropsWithChildren, ReactNode } from "react";
 
+/**
+ * A renderer that can be used instead of a plain ReactNode for the
+ * `element` property of a pane.
+ *
+ * The container injects an `openPane` helper that allows the renderer to
+ * push navigation “to the right”:  
+ *   • If the supplied `id` is new, the pane is appended.  
+ *   • If the `id` already exists, every pane to its right is discarded
+ *     and the matching pane becomes the right-most one.
+ */
 export type ScrollableTiledPaneRenderer = (args: { openPane: (next: ScrollableTiledPaneData) => void }) => ReactNode;
 
+/**
+ * Metadata required by `ScrollableTiledContainer` to describe a single
+ * pane in the horizontal stack.
+ *
+ * `element` can be either:  
+ *   • A plain ReactNode rendered as-is, or  
+ *   • A `ScrollableTiledPaneRenderer` that receives `openPane` so it can
+ *     programmatically open further panes.
+ */
 export interface ScrollableTiledPaneData {
     id: string;
     element: ReactNode | ScrollableTiledPaneRenderer;
