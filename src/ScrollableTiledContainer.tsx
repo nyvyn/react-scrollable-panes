@@ -5,7 +5,6 @@ import { PaneData, PaneRenderer, ScrollableTiledPane } from "./ScrollableTiledPa
 interface Props {
     initial: PaneData[];
     minWidth?: number; // px
-    gap?: number; // px
 }
 
 ScrollableTiledContainer.displayName = "ScrollableTiledContainer";
@@ -13,7 +12,6 @@ ScrollableTiledContainer.displayName = "ScrollableTiledContainer";
 export function ScrollableTiledContainer({
     initial,
     minWidth = 380,
-    gap = 16,
 }: Props): ReactNode {
     const [panes, setPanes] = useState<PaneData[]>(initial);
     const [ref, bounds] = useMeasure();
@@ -28,13 +26,6 @@ export function ScrollableTiledContainer({
         [],
     );
 
-    // expose to children via context if desired
-    useLayoutEffect(() => {
-        document.documentElement.style.setProperty(
-            "--rst-gap",
-            `${gap}px`,
-        );
-    }, [gap]);
 
     const paneWidth =
         bounds.width >= minWidth * panes.length
@@ -45,9 +36,6 @@ export function ScrollableTiledContainer({
         <div ref={ref} className="rst-Viewport">
             <div
                 className="rst-Track"
-                style={{
-                    gap,
-                }}
             >
                 {panes.map((p) => (
                     <ScrollableTiledPane key={p.id} width={paneWidth}>
