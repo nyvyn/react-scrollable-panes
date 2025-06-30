@@ -71,8 +71,11 @@ export function ScrollableTiledContainer({
 
         // add animation helpers only when we are actually sliding
         ...(offset > 0 && {
-            transition: "transform 300ms ease-out",
-            willChange: "transform",
+            transition:
+                "box-shadow 100ms linear, opacity 75ms linear, " +
+                "transform 200ms cubic-bezier(0.19, 1, 0.22, 1)",
+            willChange: "transform, opacity, box-shadow",
+            opacity: 1,
             // shadow on the left side whenever the track has been shifted
             boxShadow: "-12px 0 12px -6px rgba(0,0,0,0.05)",
         }),
