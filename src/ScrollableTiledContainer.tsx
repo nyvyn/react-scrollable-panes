@@ -60,6 +60,18 @@ export function ScrollableTiledContainer({
         </ScrollableTiledPane>
     );
 
+    // Build dynamic style for the track, only including slide-related properties when slide is true
+    const trackDynamicStyle: CSSProperties = {
+        ...trackStyle,
+        marginLeft: slide ? width : 0,
+        ...(slide
+            ? {
+                transform: `translateX(-${offset}px)`,
+                transition: 'transform 0.3s ease-out',
+            }
+            : {}),
+    };
+
     return (
         <div ref={viewportRef} style={viewportStyle}>
             {first && (
@@ -67,12 +79,7 @@ export function ScrollableTiledContainer({
             )}
             <div
                 data-testid="track"
-                style={{
-                    ...trackStyle,
-                    marginLeft: slide ? width : 0,
-                    transform: `translateX(-${offset}px)`,
-                    transition: "transform 0.3s ease-out",
-                }}
+                style={trackDynamicStyle}
             >
                 {rest.map(renderPane)}
             </div>
