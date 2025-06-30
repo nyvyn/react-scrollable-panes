@@ -2,10 +2,14 @@ import '../../tests/helpers/mockUseMeasure';      // ← registers the react-use
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ScrollableTiledContainer } from '../ScrollableTiledContainer';
+import type { ReactNode } from 'react';
+import type { ScrollableTiledPaneData } from '../ScrollableTiledPane';
 
-const makeOpenerPane = (id: string, nextId: string, nextElement: React.ReactNode) => ({
+type OpenPane = (next: ScrollableTiledPaneData) => void;
+
+const makeOpenerPane = (id: string, nextId: string, nextElement: ReactNode) => ({
   id,
-  element: ({ openPane }: { openPane: any }) => (
+  element: ({ openPane }: { openPane: OpenPane }) => (
     <button onClick={() => openPane({ id: nextId, element: nextElement })}>
       {`open ${nextId}`}
     </button>
@@ -46,7 +50,7 @@ it('slides panes over the first when width is limited', async () => {
 
   const paneC = { id: 'C', element: <span>C-content</span> };
   const paneB = makeOpenerPane('B', 'C', <span>C-content</span>);
-  paneB.element = ({ openPane }: { openPane }) => (
+  paneB.element = ({ openPane }: { openPane: OpenPane }) => (
     <button onClick={() => openPane(paneC)}>open C</button>
   );
 
