@@ -1,19 +1,19 @@
-import { CSSProperties, ReactNode, useCallback, useState } from "react";
+import { CSSProperties, ReactNode, useCallback, useState, useEffect, useRef } from "react";
 import useMeasure from "react-use-measure";
 import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
 
 const viewportStyle: CSSProperties = {
     display: "flex",
     flex: "1",
-    overflow: "hidden",
+    overflowX: "auto",
+    overflowY: "hidden",
     border: "1px solid yellow",
 };
 
 const trackStyle: CSSProperties = {
-    position: "relative",
-    width: "100%",
-    height: "100%",
-    border: "1px solid red",
+  display: "flex",
+  flexDirection: "row",
+  height: "100%",
 };
 
 interface Props {
@@ -28,7 +28,15 @@ export function ScrollableTiledContainer({
     minWidth,
 }: Props): ReactNode {
     const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
-    const [ref, bounds] = useMeasure();
+    const viewportEl = useRef<HTMLDivElement | null>(null);
+    const [measureRef, bounds] = useMeasure();
+    const combinedRef = useCallback(
+      (node: HTMLDivElement | null) => {
+        measureRef(node);
+        viewportEl.current = node;
+      },
+      [measureRef],
+    );
 
     /**
      *  Passed to every pane renderer so it can request navigation.
@@ -46,31 +54,24 @@ export function ScrollableTiledContainer({
     );
 
     const paneWidth = minWidth;
-    const slots = Math.max(1, Math.floor(bounds.width / paneWidth));
 
     return (
-        <div ref={ref} style={viewportStyle}>
+        <div ref={combinedRef} style={viewportStyle}>
             <div style={trackStyle}>
-                {panes.map((p, i) => {
-                    const slot = i % slots; // 0 … slots-1
-                    return (
-                        <ScrollableTiledPane
-                            key={p.id}
-                            width={paneWidth}
-                            style={{
-                                position: "absolute",
-                                top: 0,
-                                left: slot * paneWidth,
-                                zIndex: i + 1, // newer panes sit on top
-                            }}
-                        >
-                            {typeof p.element === "function"
-                                ? (p.element as ScrollableTiledPaneRenderer)({openPane})
-                                : p.element}
-                        </ScrollableTiledPane>
-                    );
-                })}
+                {panes.map((p) => (
+                  <ScrollableTiledPane key={p.id} width={paneWidth}>
+                    {typeof p.element === "function"
+                      ? (p.element as ScrollableTiledPaneRenderer)({ openPane })
+                      : p.element}
+                  </ScrollableTiledPane>
+                ))}
             </div>
         </div>
     );
+
+    // Auto-scroll to reveal the newest pane
+    useEffect(() => {
+      const el = viewportEl.current;
+      if (el) el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+    }, [panes.length]);
 }
