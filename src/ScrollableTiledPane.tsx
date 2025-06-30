@@ -11,7 +11,7 @@ type Props = PropsWithChildren<{
     width: number
 }>
 
-export const Pane = forwardRef<HTMLDivElement, Props>(
+export const ScrollableTiledPane = forwardRef<HTMLDivElement, Props>(
     ({width, children}, ref) => (
         <div
             ref={ref}
@@ -22,4 +22,4 @@ export const Pane = forwardRef<HTMLDivElement, Props>(
         </div>
     ),
 );
-Pane.displayName = "Pane";
+ScrollableTiledPane.displayName = "ScrollableTiledPane";

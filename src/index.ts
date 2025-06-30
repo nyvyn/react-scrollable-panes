@@ -1,5 +1,5 @@
-import './styles.css';
+import "./styles.css";
 
-export { TilingPanes } from "./TilingPanes";
-export { Pane } from "./Pane";
-export type { PaneData } from "./Pane";
+export { ScrollableTiledContainer } from "./ScrollableTiledContainer";
+export { ScrollableTiledPane } from "./ScrollableTiledPane";
+export type { PaneData } from "./ScrollableTiledPane";

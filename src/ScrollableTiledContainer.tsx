@@ -1,6 +1,6 @@
-import { useCallback, useLayoutEffect, useState } from "react";
+import { ReactNode, useCallback, useLayoutEffect, useState } from "react";
 import useMeasure from "react-use-measure";
-import { Pane, PaneData, PaneRenderer } from "./Pane";
+import { PaneData, PaneRenderer, ScrollableTiledPane } from "./ScrollableTiledPane";
 
 interface Props {
     initial: PaneData[];
@@ -8,13 +8,13 @@ interface Props {
     gap?: number; // px
 }
 
-TilingPanes.displayName = "TilingPanes";
+ScrollableTiledContainer.displayName = "ScrollableTiledContainer";
 
-export function TilingPanes({
+export function ScrollableTiledContainer({
     initial,
     minWidth = 380,
     gap = 16,
-}: Props): JSX.Element {
+}: Props): ReactNode {
     const [panes, setPanes] = useState<PaneData[]>(initial);
     const [ref, bounds] = useMeasure();
 
@@ -50,11 +50,11 @@ export function TilingPanes({
                 }}
             >
                 {panes.map((p) => (
-                    <Pane key={p.id} width={paneWidth}>
+                    <ScrollableTiledPane key={p.id} width={paneWidth}>
                         {typeof p.element === "function"
-                            ? (p.element as PaneRenderer)({ openPane })
+                            ? (p.element as PaneRenderer)({openPane})
                             : p.element}
-                    </Pane>
+                    </ScrollableTiledPane>
                 ))}
             </div>
         </div>

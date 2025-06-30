@@ -1,5 +1,5 @@
 :root {
-  --rst-gap: 16px;   /* default gap (same as TilingPanes’ default prop) */
+    --rst-gap: 16px; /* default gap (same as ScrollableTiledContainer’ default prop) */
 }
 
 /* react-scrollable-tiles styles */
