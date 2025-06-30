@@ -23,6 +23,7 @@ export type ScrollableTiledPaneRenderer = (args: { openPane: (next: ScrollableTi
  */
 export interface ScrollableTiledPaneData {
     id: string;
+    title: string;
     element: ReactNode | ScrollableTiledPaneRenderer;
 }
 

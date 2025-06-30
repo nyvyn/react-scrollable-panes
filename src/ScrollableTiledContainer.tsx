@@ -1,6 +1,7 @@
 import { CSSProperties, ReactNode, useCallback, useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
+import { VerticalTab } from "./VerticalTab";
 
 const viewportStyle: CSSProperties = {
     display: "flex",
@@ -16,6 +17,8 @@ const trackStyle: CSSProperties = {
     flexDirection: "row",
     height: "100%",
 };
+
+const tabWidth = 20;
 
 interface Props {
     initial: ScrollableTiledPaneData[];
@@ -50,11 +53,22 @@ export function ScrollableTiledContainer({
         [],
     );
 
-    const [first, ...rest] = panes;
-
     const paneWidth = Math.min(width, bounds.width);
 
-    const offset = Math.max(0, paneWidth * panes.length - bounds.width);
+    let leftTabs = 0;
+    let available = bounds.width;
+    while (leftTabs < panes.length - 1) {
+        const remaining = panes.length - leftTabs;
+        const overflow = paneWidth * remaining - available;
+        if (overflow <= paneWidth) break;
+        leftTabs += 1;
+        available -= tabWidth;
+    }
+
+    const tabs = panes.slice(0, leftTabs);
+    const [first, ...rest] = panes.slice(leftTabs);
+
+    const offset = Math.max(0, paneWidth * (rest.length) - (available - paneWidth));
 
     const renderPane = (p: ScrollableTiledPaneData, extraStyle?: CSSProperties) => (
         <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
@@ -82,10 +96,16 @@ export function ScrollableTiledContainer({
 
     return (
         <div ref={viewportRef} style={viewportStyle}>
-            {first && renderPane(first, offset > 0 ? {position: "absolute"} : undefined)}
+            {tabs.map(t => (
+                <VerticalTab key={t.id} title={t.title} />
+            ))}
+            {first &&
+                renderPane(first, offset > 0
+                    ? { position: "absolute", left: leftTabs * tabWidth }
+                    : { marginLeft: leftTabs * tabWidth })}
             <div
                 data-testid="track"
-                style={{...trackStyle, left: width, ...slideStyle}}
+                style={{ ...trackStyle, left: leftTabs * tabWidth + paneWidth, ...slideStyle }}
             >
                 {rest.map(p => renderPane(p))}
             </div>
