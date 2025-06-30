@@ -45,7 +45,6 @@ export function ScrollableTiledContainer({
         [],
     );
 
-
     const paneWidth = minWidth;
     const slots = Math.max(1, Math.floor(bounds.width / paneWidth));
 
@@ -66,7 +65,7 @@ export function ScrollableTiledContainer({
                             }}
                         >
                             {typeof p.element === "function"
-                                ? (p.element as ScrollableTiledPaneRenderer)({ openPane })
+                                ? (p.element as ScrollableTiledPaneRenderer)({openPane})
                                 : p.element}
                         </ScrollableTiledPane>
                     );
