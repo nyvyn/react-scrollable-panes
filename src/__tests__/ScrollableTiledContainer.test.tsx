@@ -3,9 +3,13 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ScrollableTiledContainer } from '../ScrollableTiledContainer';
 
+import type { ScrollableTiledPaneData } from '../ScrollableTiledPane';
+
+type OpenPane = (next: ScrollableTiledPaneData) => void;
+
 const makeOpenerPane = (id: string, nextId: string, nextElement: React.ReactNode) => ({
   id,
-  element: ({ openPane }: { openPane: any }) => (
+  element: ({ openPane }: { openPane: OpenPane }) => (
     <button onClick={() => openPane({ id: nextId, element: nextElement })}>
       {`open ${nextId}`}
     </button>
@@ -46,14 +50,14 @@ it('slides panes over the first when width is limited', async () => {
 
   const paneC = { id: 'C', element: <span>C-content</span> };
   const paneB = makeOpenerPane('B', 'C', <span>C-content</span>);
-  paneB.element = ({ openPane }: { openPane: any }) => (
+  paneB.element = ({ openPane }: { openPane: OpenPane }) => (
     <button onClick={() => openPane(paneC)}>open C</button>
   );
 
   const initial = [
     {
       id: 'A',
-      element: ({ openPane }: { openPane: any }) => (
+      element: ({ openPane }: { openPane: OpenPane }) => (
         <button onClick={() => openPane(paneB)}>open B</button>
       ),
     },
