@@ -38,14 +38,15 @@ const basePaneStyle: CSSProperties = {
 };
 
 type Props = PropsWithChildren<{
-    width: number
-}>
+    width: number;
+    style?: CSSProperties;
+}>;
 
 export const ScrollableTiledPane = forwardRef<HTMLDivElement, Props>(
-    ({width, children}, ref) => (
+    ({ width, style, children }, ref) => (
         <div
             ref={ref}
-            style={{...basePaneStyle, width}}
+            style={{ ...basePaneStyle, width, ...style }}
         >
             {children}
         </div>

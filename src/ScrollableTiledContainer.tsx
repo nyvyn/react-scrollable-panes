@@ -5,15 +5,14 @@ import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRender
 const viewportStyle: CSSProperties = {
     display: "flex",
     flex: "1",
-    overflowX: "auto",
+    overflow: "hidden",
     border: "1px solid yellow",
 };
 
 const trackStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "row",
-    flex: "1",
-    gap: 0,
+    position: "relative",
+    width: "100%",
+    height: "100%",
     border: "1px solid red",
 };
 
@@ -47,24 +46,31 @@ export function ScrollableTiledContainer({
     );
 
 
-    const paneWidth =
-        bounds.width >= minWidth * panes.length
-            ? bounds.width / panes.length
-            : minWidth;
+    const paneWidth = minWidth;
+    const slots = Math.max(1, Math.floor(bounds.width / paneWidth));
 
     return (
         <div ref={ref} style={viewportStyle}>
             <div style={trackStyle}>
-                {panes.map((p) => (
-                    <ScrollableTiledPane
-                        key={p.id}
-                        width={paneWidth}
-                    >
-                        {typeof p.element === "function"
-                            ? (p.element as ScrollableTiledPaneRenderer)({openPane})
-                            : p.element}
-                    </ScrollableTiledPane>
-                ))}
+                {panes.map((p, i) => {
+                    const slot = i % slots; // 0 … slots-1
+                    return (
+                        <ScrollableTiledPane
+                            key={p.id}
+                            width={paneWidth}
+                            style={{
+                                position: "absolute",
+                                top: 0,
+                                left: slot * paneWidth,
+                                zIndex: i + 1, // newer panes sit on top
+                            }}
+                        >
+                            {typeof p.element === "function"
+                                ? (p.element as ScrollableTiledPaneRenderer)({ openPane })
+                                : p.element}
+                        </ScrollableTiledPane>
+                    );
+                })}
             </div>
         </div>
     );
