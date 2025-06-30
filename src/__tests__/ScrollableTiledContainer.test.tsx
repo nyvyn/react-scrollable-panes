@@ -2,13 +2,14 @@ import '../../tests/helpers/mockUseMeasure'; // activates the hook mock
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ReactNode } from "react";
 import { ScrollableTiledContainer } from '../ScrollableTiledContainer';
 import { PaneData } from '../ScrollableTiledPane';
 import { vi } from 'vitest';
 
 // Mock the pane component so we can inspect width via inline style
 vi.mock('../ScrollableTiledPane', () => ({
-  ScrollableTiledPane: ({ width, children }: { width: number; children: React.ReactNode }) => (
+  ScrollableTiledPane: ({ width, children }: { width: number; children: ReactNode }) => (
     <div data-testid="pane" style={{ width }}>{children}</div>
   )
 }));
