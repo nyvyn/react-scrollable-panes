@@ -8,6 +8,8 @@ interface Props {
     gap?: number; // px
 }
 
+TilingPanes.displayName = "TilingPanes";
+
 export function TilingPanes({
     initial,
     minWidth = 380,
