@@ -21,7 +21,7 @@ it('appends a new pane and recalculates pane widths', async () => {
     makeOpenerPane('A', 'B', <span>B-content</span>),
   ];
 
-  render(<ScrollableTiledContainer initial={initial} minWidth={minWidth} />);
+  render(<ScrollableTiledContainer initial={initial} width={minWidth} />);
 
   // → initially exactly one .pane with full width (= 800 px from mock)
   let panes = screen.getAllByTestId('pane');
@@ -46,7 +46,7 @@ it('slides panes over the first when width is limited', async () => {
 
   const paneC = { id: 'C', element: <span>C-content</span> };
   const paneB = makeOpenerPane('B', 'C', <span>C-content</span>);
-  paneB.element = ({ openPane }: { openPane: any }) => (
+  paneB.element = ({ openPane }: { openPane }) => (
     <button onClick={() => openPane(paneC)}>open C</button>
   );
 
@@ -59,7 +59,7 @@ it('slides panes over the first when width is limited', async () => {
     },
   ];
 
-  render(<ScrollableTiledContainer initial={initial} minWidth={minWidth} />);
+  render(<ScrollableTiledContainer initial={initial} width={minWidth} />);
 
   await user.click(screen.getByRole('button', { name: /open B/i }));
   await user.click(screen.getByRole('button', { name: /open C/i }));
