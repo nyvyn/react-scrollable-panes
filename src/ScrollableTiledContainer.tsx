@@ -8,6 +8,7 @@ const viewportStyle: CSSProperties = {
     overflowX: "hidden",
     overflowY: "hidden",
     border: "1px solid yellow",
+    position: "relative", // allow panes to be absolutely positioned
 };
 
 const trackStyle: CSSProperties = {
@@ -56,8 +57,28 @@ export function ScrollableTiledContainer({
     const totalWidth = paneWidth * panes.length;
     const offset = Math.max(0, totalWidth - bounds.width);   // px to slide left
 
+    const [first, ...rest] = panes;
+    const firstPeek = 60; // px of the first pane to keep visible when overlapped
+
     return (
         <div ref={viewportRef} style={viewportStyle}>
+            {offset > 0 && first && (
+                <ScrollableTiledPane
+                    key={first.id}
+                    width={paneWidth}
+                    style={panes.length > 1
+                      ? {
+                          position: "absolute",
+                          left: Math.max(-paneWidth, -offset + firstPeek),
+                          zIndex: 1,
+                        }
+                      : undefined}
+                >
+                    {typeof first.element === "function"
+                      ? (first.element as ScrollableTiledPaneRenderer)({ openPane })
+                      : first.element}
+                </ScrollableTiledPane>
+            )}
             <div
               style={{
                 ...trackStyle,
@@ -65,7 +86,7 @@ export function ScrollableTiledContainer({
                 transition: "transform 0.3s ease-out",
               }}
             >
-                {panes.map((p) => (
+                {(offset > 0 ? rest : panes).map((p) => (
                   <ScrollableTiledPane key={p.id} width={paneWidth}>
                     {typeof p.element === "function"
                       ? (p.element as ScrollableTiledPaneRenderer)({ openPane })

@@ -2,10 +2,11 @@ import '../../tests/helpers/mockUseMeasure';      // ← registers the react-use
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ScrollableTiledContainer } from '../ScrollableTiledContainer';
+import { ScrollableTiledPaneData } from '../ScrollableTiledPane';
 
 const makeOpenerPane = (id: string, nextId: string, nextElement: React.ReactNode) => ({
   id,
-  element: ({ openPane }: { openPane: any }) => (
+  element: ({ openPane }: { openPane: (next: ScrollableTiledPaneData) => void }) => (
     <button onClick={() => openPane({ id: nextId, element: nextElement })}>
       {`open ${nextId}`}
     </button>
