@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    // let TypeScript/tsup understand .tsx files
+    "jsx": "react-jsx",
+
+    /* ─── common sensible defaults ─── */
+    "target": "ES2018",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,          // so tsup can emit *.d.ts
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}
