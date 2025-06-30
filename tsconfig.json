@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    // let TypeScript/tsup understand .tsx files
+    "jsx": "react-jsx",
+
+    /* ─── common sensible defaults ─── */
+    "target": "ES2018",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "outDir": "dist",
+    "types": ["vitest/globals", "@vitest/browser/context", "vite/client", "@testing-library/jest-dom"]
+  },
+  "include": ["src"]
+}
