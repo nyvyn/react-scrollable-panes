@@ -10,7 +10,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "declaration": true,          // so tsup can emit *.d.ts
+    "declaration": true,
     "outDir": "dist",
     "types": ["vitest/globals", "vite/client"]
   },
