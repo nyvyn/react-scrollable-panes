@@ -55,6 +55,15 @@ export function ScrollableTiledContainer({
 
     const paneWidth = minWidth;
 
+    // Auto-scroll to reveal the newest pane
+    useEffect(() => {
+      const el = viewportEl.current;
+      if (!el) return;
+      const maxOffset = el.scrollWidth - el.clientWidth;
+      if (maxOffset > 0)
+        el.scrollTo({ left: maxOffset, behavior: "smooth" });
+    }, [panes.length]);
+
     return (
         <div ref={combinedRef} style={viewportStyle}>
             <div style={trackStyle}>
@@ -68,10 +77,4 @@ export function ScrollableTiledContainer({
             </div>
         </div>
     );
-
-    // Auto-scroll to reveal the newest pane
-    useEffect(() => {
-      const el = viewportEl.current;
-      if (el) el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
-    }, [panes.length]);
 }
