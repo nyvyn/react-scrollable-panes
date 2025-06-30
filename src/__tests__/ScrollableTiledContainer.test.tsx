@@ -57,7 +57,7 @@ it('slides panes over the first when width is limited', async () => {
   const initial = [
     {
       id: 'A',
-      element: ({ openPane }: { openPane: any }) => (
+      element: ({ openPane }: { openPane: OpenPane }) => (
         <button onClick={() => openPane(paneB)}>open B</button>
       ),
     },
