@@ -33,7 +33,7 @@ const basePaneStyle: CSSProperties = {
     flexDirection: "column",
     flexShrink: "0",
     flexGrow: "0",
-    overflowY: "auto",
+    overflowY: "scroll",
     boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03)",
 };
 

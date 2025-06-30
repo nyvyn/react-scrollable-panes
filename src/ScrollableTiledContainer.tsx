@@ -20,20 +20,20 @@ const trackStyle: CSSProperties = {
 
 interface Props {
     initial: ScrollableTiledPaneData[];
-    width: number; // px
+    width: number;           // minimum width for a single pane (px)
 }
 
 ScrollableTiledContainer.displayName = "ScrollableTiledContainer";
 
 export function ScrollableTiledContainer({
     initial,
-    width: minWidth,
+    width,
 }: Props): ReactNode {
     const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
     const [viewportRef, bounds] = useMeasure();   // gives us bounds.width
 
     useEffect(() => {
-        setPanes(initial);        // replace the stack with the new initial panes
+        setPanes(initial);
     }, [initial]);
 
     /**
@@ -51,21 +51,12 @@ export function ScrollableTiledContainer({
         [],
     );
 
-    const paneWidth =
-        bounds.width && panes.length * minWidth <= bounds.width
-            ? Math.floor(bounds.width / panes.length)
-            : minWidth;
-
-    const totalWidth = minWidth * panes.length;   // used only for slide maths
-    const offset = Math.max(0, totalWidth - bounds.width); // px to slide left
-
     const [first, ...rest] = panes;
 
-    const renderPane = (
-        p: ScrollableTiledPaneData,
-        extraStyle: CSSProperties = {}
-    ) => (
-        <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
+    const offset = Math.max(0, width * panes.length - bounds.width);
+
+    const renderPane = (p: ScrollableTiledPaneData, extraStyle?: CSSProperties) => (
+        <ScrollableTiledPane key={p.id} width={width} style={extraStyle}>
             {typeof p.element === "function"
                 ? (p.element as ScrollableTiledPaneRenderer)({openPane})
                 : p.element}
@@ -73,28 +64,24 @@ export function ScrollableTiledContainer({
     );
 
     const slideStyle: CSSProperties = {
+        // always reflect the *current* offset
         transform: `translateX(-${offset}px)`,
-        transition: 'transform 300ms ease-out',
-        willChange: 'transform',
-    };
 
-    // Auto-scroll to reveal the newest pane
-    useEffect(() => {
-      const el = viewportEl.current;
-      if (!el) return;
-      const maxOffset = el.scrollWidth - el.clientWidth;
-      if (maxOffset > 0)
-        el.scrollTo({ left: maxOffset, behavior: "smooth" });
-    }, [panes.length]);
+        // add animation helpers only when we are actually sliding
+        ...(offset > 0 && {
+            transition: "transform 300ms ease-out",
+            willChange: "transform",
+        }),
+    };
 
     return (
         <div ref={viewportRef} style={viewportStyle}>
-            {first && renderPane(first, offset > 0 ? { position: 'absolute' } : undefined)}
+            {first && renderPane(first, offset > 0 ? {position: "absolute"} : undefined)}
             <div
                 data-testid="track"
-                style={{ ...trackStyle, left: paneWidth, ...slideStyle }}
+                style={{...trackStyle, left: width, ...slideStyle}}
             >
-                {rest.map((pane) => renderPane(pane))}
+                {rest.map(p => renderPane(p))}
             </div>
         </div>
     );
