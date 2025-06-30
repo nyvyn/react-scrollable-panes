@@ -47,9 +47,6 @@ export function ScrollableTiledContainer({
         [],
     );
 
-    const totalWidth = width * panes.length;
-    const offset = Math.max(0, totalWidth - bounds.width); // px to slide left
-
     const [first, ...rest] = panes;
 
     const paneWidth =
