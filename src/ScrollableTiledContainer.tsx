@@ -1,9 +1,23 @@
-import { ReactNode, useCallback, useState } from "react";
+import { CSSProperties, ReactNode, useCallback, useState } from "react";
 import useMeasure from "react-use-measure";
-import { PaneData, PaneRenderer, ScrollableTiledPane } from "./ScrollableTiledPane";
+import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
+
+const viewportStyle: CSSProperties = {
+    width: "100%",
+    overflowX: "auto",
+    boxSizing: "border-box",
+};
+
+const trackStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 0,
+    minHeight: "100%",
+};
 
 interface Props {
-    initial: PaneData[];
+    initial: ScrollableTiledPaneData[];
     minWidth?: number; // px
 }
 
@@ -13,12 +27,12 @@ export function ScrollableTiledContainer({
     initial,
     minWidth = 380,
 }: Props): ReactNode {
-    const [panes, setPanes] = useState<PaneData[]>(initial);
+    const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
     const [ref, bounds] = useMeasure();
 
     // adds or replaces the rightmost pane
     const openPane = useCallback(
-        (next: PaneData) =>
+        (next: ScrollableTiledPaneData) =>
             setPanes((prev) => {
                 const i = prev.findIndex((p: { id: string; }) => p.id === next.id);
                 return i === -1 ? [...prev, next] : [...prev.slice(0, i + 1)];
@@ -33,14 +47,12 @@ export function ScrollableTiledContainer({
             : minWidth;
 
     return (
-        <div ref={ref} className="rst-Viewport">
-            <div
-                className="rst-Track"
-            >
+        <div ref={ref} style={viewportStyle}>
+            <div style={trackStyle}>
                 {panes.map((p) => (
                     <ScrollableTiledPane key={p.id} width={paneWidth}>
                         {typeof p.element === "function"
-                            ? (p.element as PaneRenderer)({openPane})
+                            ? (p.element as ScrollableTiledPaneRenderer)({openPane})
                             : p.element}
                     </ScrollableTiledPane>
                 ))}
