@@ -50,6 +50,7 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-react": "^7.37.5",
     "husky": "^9.0.0",
+    "jsdom": "^26.1.0",
     "lint-staged": "^16.1.2",
     "tsup": "^8.0.0",
     "typescript": "^5.5.0",
