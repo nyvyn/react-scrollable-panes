@@ -12,7 +12,7 @@
     "skipLibCheck": true,
     "declaration": true,
     "outDir": "dist",
-    "types": ["vitest/globals", "vite/client"]
+    "types": ["vitest/globals", "@vitest/browser/context", "vite/client"]
   },
   "include": ["src"]
 }
