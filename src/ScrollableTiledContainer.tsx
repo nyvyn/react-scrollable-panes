@@ -5,13 +5,15 @@ import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRender
 const viewportStyle: CSSProperties = {
     display: "flex",
     flex: "1",
-    overflowX: "hidden",
-    overflowY: "hidden",
+    width: "100%",
+    overflow: "hidden",
     border: "1px solid yellow",
     position: "relative",
 };
 
 const trackStyle: CSSProperties = {
+    position: "absolute",
+    right: "0",
     display: "flex",
     flexDirection: "row",
     height: "100%",
@@ -50,7 +52,7 @@ export function ScrollableTiledContainer({
     const offset = Math.max(0, totalWidth - bounds.width); // px to slide left
 
     const [first, ...rest] = panes;
-    const slide = offset > 0 && rest.length > 0;
+    const left = width - totalWidth - bounds.width;
 
     const renderPane = (p: ScrollableTiledPaneData) => (
         <ScrollableTiledPane key={p.id} width={width}>
@@ -61,15 +63,12 @@ export function ScrollableTiledContainer({
     );
 
     // Build dynamic style for the track, only including slide-related properties when slide is true
-    const trackDynamicStyle: CSSProperties = {
-        ...trackStyle,
-        marginLeft: slide ? width : 0,
-        ...(slide
-            ? {
-                transform: `translateX(-${offset}px)`,
-                transition: 'transform 0.3s ease-out',
-            }
-            : {}),
+    const slideStyle: CSSProperties = {
+        ...({
+            transform: `translateX(-${left}px)`,
+            transition: "transform 300ms ease-out",
+            willChange: "transform",
+        }),
     };
 
     return (
@@ -79,7 +78,7 @@ export function ScrollableTiledContainer({
             )}
             <div
                 data-testid="track"
-                style={trackDynamicStyle}
+                style={{...trackStyle, ...slideStyle}}
             >
                 {rest.map(renderPane)}
             </div>
