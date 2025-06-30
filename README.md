@@ -9,7 +9,6 @@ npm i react-scrollable-panes
 ## Quick-start
 ```tsx
 import { ScrollableTiledContainer, PaneData } from 'react-scrollable-panes';
-import 'react-scrollable-panes/styles.css';
 
 const initial: PaneData[] = [
   {
@@ -56,15 +55,6 @@ Calling `openPane(next)` appends *next* to the right of the calling pane and rem
 • All panes share available width equally.  
 • If equal division would give any pane `< minWidth`, panes keep `minWidth` and the container becomes horizontally scrollable.  
 • `openPane` automatically scrolls the new pane into view.
-
-## Styling
-The package ships with minimal CSS (`styles.css`) that defines:
-
-* `.rst-Viewport` – scrollable x-axis wrapper  
-* `.rst-Track`    – flex row holding panes  
-* `.rst-Pane`     – individual pane (white background, rounded corners, shadow)
-
-Override these classes or wrap the component in your own layout as needed.
 
 ## Contributing
 PRs and issues are welcome. Run the dev setup with:

@@ -2,6 +2,20 @@ import { ReactNode, useCallback, useState } from "react";
 import useMeasure from "react-use-measure";
 import { PaneData, PaneRenderer, ScrollableTiledPane } from "./ScrollableTiledPane";
 
+const viewportStyle: React.CSSProperties = {
+  width: '100%',
+  overflowX: 'auto',
+  boxSizing: 'border-box',
+};
+
+const trackStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'stretch',
+  gap: 0,
+  minHeight: '100%',
+};
+
 interface Props {
     initial: PaneData[];
     minWidth?: number; // px
@@ -33,10 +47,8 @@ export function ScrollableTiledContainer({
             : minWidth;
 
     return (
-        <div ref={ref} className="rst-Viewport">
-            <div
-                className="rst-Track"
-            >
+        <div ref={ref} style={viewportStyle}>
+            <div style={trackStyle}>
                 {panes.map((p) => (
                     <ScrollableTiledPane key={p.id} width={paneWidth}>
                         {typeof p.element === "function"
