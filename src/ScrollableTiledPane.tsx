@@ -1,23 +1,23 @@
 import { CSSProperties, forwardRef, PropsWithChildren, ReactNode } from "react";
 
 /**
- * A renderer that can be used instead of a plain ReactNode for the
- * `element` property of a pane.
+ *  A renderer that can be used instead of a plain ReactNode for the
+ *  `element` property of a pane.
  *
- * The container injects an `openPane` helper that allows the renderer to
- * push navigation “to the right”:  
- *   • If the supplied `id` is new, the pane is appended.  
+ *  The container injects an `openPane` helper that allows the renderer to
+ *  push navigation “to the right”:
+ *   • If the supplied `id` is new, the pane is appended.
  *   • If the `id` already exists, every pane to its right is discarded
  *     and the matching pane becomes the right-most one.
  */
 export type ScrollableTiledPaneRenderer = (args: { openPane: (next: ScrollableTiledPaneData) => void }) => ReactNode;
 
 /**
- * Metadata required by `ScrollableTiledContainer` to describe a single
- * pane in the horizontal stack.
+ *  Metadata required by `ScrollableTiledContainer` to describe a single
+ *  pane in the horizontal stack.
  *
- * `element` can be either:  
- *   • A plain ReactNode rendered as-is, or  
+ *  `element` can be either:
+ *   • A plain ReactNode rendered as-is, or
  *   • A `ScrollableTiledPaneRenderer` that receives `openPane` so it can
  *     programmatically open further panes.
  */
@@ -31,6 +31,8 @@ const basePaneStyle: CSSProperties = {
     height: "100%",
     display: "flex",
     flexDirection: "column",
+    flexShrink: "0",
+    flexGrow: "0",
     overflow: "hidden",
     boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03)",
 };

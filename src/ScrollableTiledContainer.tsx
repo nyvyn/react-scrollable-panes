@@ -19,24 +19,23 @@ const trackStyle: CSSProperties = {
 
 interface Props {
     initial: ScrollableTiledPaneData[];
-    minWidth?: number; // px
+    minWidth: number; // px
 }
 
 ScrollableTiledContainer.displayName = "ScrollableTiledContainer";
 
 export function ScrollableTiledContainer({
     initial,
-    minWidth = 380,
+    minWidth,
 }: Props): ReactNode {
     const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
     const [ref, bounds] = useMeasure();
 
-    // adds or replaces the rightmost pane
     /**
-     * Passed to every pane renderer so it can request navigation.
-     * – Appends the pane when its `id` is new.  
-     * – Otherwise keeps panes up to (and including) the matching `id`,
-     *   effectively replacing everything to its right.
+     *  Passed to every pane renderer so it can request navigation.
+     *   – Appends the pane when its `id` is new.
+     *   – Otherwise keeps panes up to (and including) the matching `id`,
+     *     effectively replacing everything to its right.
      */
     const openPane = useCallback(
         (next: ScrollableTiledPaneData) =>
@@ -57,7 +56,10 @@ export function ScrollableTiledContainer({
         <div ref={ref} style={viewportStyle}>
             <div style={trackStyle}>
                 {panes.map((p) => (
-                    <ScrollableTiledPane key={p.id} width={paneWidth}>
+                    <ScrollableTiledPane
+                        key={p.id}
+                        width={paneWidth}
+                    >
                         {typeof p.element === "function"
                             ? (p.element as ScrollableTiledPaneRenderer)({openPane})
                             : p.element}
