@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useLayoutEffect, useState } from "react";
+import { ReactNode, useCallback, useState } from "react";
 import useMeasure from "react-use-measure";
 import { PaneData, PaneRenderer, ScrollableTiledPane } from "./ScrollableTiledPane";
 
