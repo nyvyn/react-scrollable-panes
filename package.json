@@ -1,7 +1,7 @@
 {
-  "name": "react-scrollable-tiles",
+  "name": "react-scrollable-panes",
   "version": "0.1.0",
-  "description": "Scrollable tiling pane library for React inspired by Andy Matuschak notes.",
+  "description": "Scrollable tiled-pane library for React inspired by Andy Matuschak notes.",
   "license": "MIT",
   "author": "nyvyn",
   "repository": {
@@ -9,13 +9,7 @@
     "url": "https://github.com/nyvyn/react-scrollable-tiles.git"
   },
   "homepage": "https://github.com/nyvyn/react-scrollable-tiles#readme",
-  "keywords": [
-    "react",
-    "tiling",
-    "panes",
-    "scroll",
-    "tsx"
-  ],
+  "keywords": ["react", "tiles", "panes", "scroll", "tsx"],
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

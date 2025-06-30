@@ -1,15 +1,15 @@
-# react-scrollable-tiles
+# react-scrollable-panes
 Scrollable horizontally-tiled panes for React.
 
 ## Installation
 ```bash
-npm i react-scrollable-tiles
+npm i react-scrollable-panes
 ```
 
 ## Quick-start
 ```tsx
-import { ScrollableTiledContainer, PaneData } from 'react-scrollable-tiles';
-import 'react-scrollable-tiles/styles.css';
+import { ScrollableTiledContainer, PaneData } from 'react-scrollable-panes';
+import 'react-scrollable-panes/styles.css';
 
 const initial: PaneData[] = [
   {
