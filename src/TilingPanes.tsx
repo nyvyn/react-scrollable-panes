@@ -1,4 +1,4 @@
-import { FC, useCallback, useLayoutEffect, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { Pane, PaneData, PaneRenderer } from "./Pane";
 
@@ -8,11 +8,11 @@ interface Props {
     gap?: number; // px
 }
 
-export const TilingPanes: FC<Props> = ({
+export function TilingPanes({
     initial,
     minWidth = 380,
     gap = 16,
-}) => {
+}: Props): JSX.Element {
     const [panes, setPanes] = useState<PaneData[]>(initial);
     const [ref, bounds] = useMeasure();
 
@@ -57,4 +57,4 @@ export const TilingPanes: FC<Props> = ({
             </div>
         </div>
     );
-};
+}
