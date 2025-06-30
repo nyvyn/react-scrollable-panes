@@ -3,17 +3,18 @@ import useMeasure from "react-use-measure";
 import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
 
 const viewportStyle: CSSProperties = {
-    width: "100%",
+    display: "flex",
+    flex: "1",
     overflowX: "auto",
-    boxSizing: "border-box",
+    border: "1px solid yellow",
 };
 
 const trackStyle: CSSProperties = {
     display: "flex",
     flexDirection: "row",
-    alignItems: "stretch",
+    flex: "1",
     gap: 0,
-    minHeight: "100%",
+    border: "1px solid red",
 };
 
 interface Props {

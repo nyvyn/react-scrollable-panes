@@ -8,14 +8,12 @@ export interface ScrollableTiledPaneData {
 }
 
 const basePaneStyle: CSSProperties = {
-    background: "#fff",
-    borderRadius: 8,
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03)",
-    minWidth: 0,
-    minHeight: 0,
+    backgroundColor: "white",
+    height: "100%",
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03)",
 };
 
 type Props = PropsWithChildren<{
@@ -26,7 +24,7 @@ export const ScrollableTiledPane = forwardRef<HTMLDivElement, Props>(
     ({width, children}, ref) => (
         <div
             ref={ref}
-            style={{...basePaneStyle, width, flex: `0 0 ${width}px`}}
+            style={{...basePaneStyle, width}}
         >
             {children}
         </div>
