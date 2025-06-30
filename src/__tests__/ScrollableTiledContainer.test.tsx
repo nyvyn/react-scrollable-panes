@@ -1,51 +1,78 @@
-import "../../tests/helpers/mockUseMeasure"; // activates the hook mock
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { ReactNode } from "react";
-import { vi } from "vitest";
-import { ScrollableTiledContainer } from "../ScrollableTiledContainer";
-import { ScrollableTiledPaneData } from "../ScrollableTiledPane";
+import '../../tests/helpers/mockUseMeasure';      // ← registers the react-use-measure mock
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { ScrollableTiledContainer } from '../ScrollableTiledContainer';
+import type { ReactNode } from 'react';
+import type { ScrollableTiledPaneData } from '../ScrollableTiledPane';
 
-// Mock the pane component so we can inspect width via inline style
-vi.mock("../ScrollableTiledPane", () => ({
-    ScrollableTiledPane: ({width, children}: { width: number; children: ReactNode }) => (
-        <div data-testid="pane" style={{width}}>{children}</div>
-    )
-}));
+type OpenPane = (next: ScrollableTiledPaneData) => void;
 
-const makePane = (
-    id: string,
-    label: string,
-    onOpen?: (open: (next: ScrollableTiledPaneData) => void) => void
-): ScrollableTiledPaneData => ({
-    id,
-    element: ({openPane}) => (
-        <button data-testid={`btn-${id}`} onClick={() => onOpen?.(openPane)}>
-            {label}
-        </button>
-    )
+const makeOpenerPane = (id: string, nextId: string, nextElement: ReactNode) => ({
+  id,
+  element: ({ openPane }: { openPane: OpenPane }) => (
+    <button onClick={() => openPane({ id: nextId, element: nextElement })}>
+      {`open ${nextId}`}
+    </button>
+  ),
 });
 
-describe("ScrollableTiledContainer", () => {
-    it("renders the initial panes", () => {
-        render(<ScrollableTiledContainer initial={[makePane("a", "A"), makePane("b", "B")]}/>);
-        expect(screen.getAllByRole("button")).toHaveLength(2);
-    });
+it('appends a new pane and recalculates pane widths', async () => {
+  const user = userEvent.setup();
+  const minWidth = 200;
 
-    it("openPane appends or trims panes", async () => {
-        const user = userEvent.setup();
-        const panes = [
-            makePane("a", "A", (open) => open({id: "c", element: <span>C</span>}))
-        ];
-        render(<ScrollableTiledContainer initial={panes}/>);
-        await user.click(screen.getByTestId("btn-a"));
-        expect(screen.getByText("C")).toBeInTheDocument();
-    });
+  // 1️⃣  one opener pane that can add pane “B”
+  const initial = [
+    makeOpenerPane('A', 'B', <span>B-content</span>),
+  ];
 
-    it("splits width evenly when container is wide enough", () => {
-        render(<ScrollableTiledContainer initial={[makePane("a", "A"), makePane("b", "B")]}/>);
-        const paneWidths = screen.getAllByTestId("pane").map((n) => parseInt((n as HTMLElement).style.width, 10));
-        // 800 mocked width / 2 panes = 400
-        expect(paneWidths.every((w) => w === 400)).toBe(true);
-    });
+  render(<ScrollableTiledContainer initial={initial} width={minWidth} />);
+
+  // → initially exactly one .pane with full width (= 800 px from mock)
+  let panes = screen.getAllByTestId('pane');
+  expect(panes).toHaveLength(1);
+  expect(panes[0]).toHaveStyle({ width: '800px' });
+
+  // 2️⃣  click button inside first pane to open B
+  await user.click(screen.getByRole('button', { name: /open B/i }));
+
+  // → now two panes, both 400 px wide (800 px / 2)
+  panes = screen.getAllByTestId('pane');
+  expect(panes).toHaveLength(2);
+  panes.forEach(p => expect(p).toHaveStyle({ width: '400px' }));
+
+  // and the new pane’s content is rendered
+  expect(screen.getByText('B-content')).toBeInTheDocument();
+});
+
+it('slides panes over the first when width is limited', async () => {
+  const user = userEvent.setup();
+  const minWidth = 300;
+
+  const paneC = { id: 'C', element: <span>C-content</span> };
+  const paneB = makeOpenerPane('B', 'C', <span>C-content</span>);
+  paneB.element = ({ openPane }: { openPane: OpenPane }) => (
+    <button onClick={() => openPane(paneC)}>open C</button>
+  );
+
+  const initial = [
+    {
+      id: 'A',
+      element: ({ openPane }: { openPane: OpenPane }) => (
+        <button onClick={() => openPane(paneB)}>open B</button>
+      ),
+    },
+  ];
+
+  render(<ScrollableTiledContainer initial={initial} width={minWidth} />);
+
+  await user.click(screen.getByRole('button', { name: /open B/i }));
+  await user.click(screen.getByRole('button', { name: /open C/i }));
+
+  const panes = screen.getAllByTestId('pane');
+  expect(panes).toHaveLength(3);
+  panes.forEach((p) => expect(p).toHaveStyle({ width: '300px' }));
+  expect(panes[0]).toHaveStyle({ position: 'absolute' });
+
+  const track = screen.getByTestId('track');
+  expect(track).toHaveStyle({ transform: 'translateX(-100px)' });
 });

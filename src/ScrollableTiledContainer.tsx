@@ -1,36 +1,47 @@
-import { CSSProperties, ReactNode, useCallback, useState } from "react";
+import { CSSProperties, ReactNode, useCallback, useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
 
 const viewportStyle: CSSProperties = {
+    display: "flex",
+    flex: "1",
     width: "100%",
-    overflowX: "auto",
-    boxSizing: "border-box",
+    overflow: "hidden",
+    border: "1px solid yellow",
+    position: "relative",
 };
 
 const trackStyle: CSSProperties = {
+    position: "absolute",
     display: "flex",
     flexDirection: "row",
-    alignItems: "stretch",
-    gap: 0,
-    minHeight: "100%",
+    height: "100%",
 };
 
 interface Props {
     initial: ScrollableTiledPaneData[];
-    minWidth?: number; // px
+    width: number; // px
 }
 
 ScrollableTiledContainer.displayName = "ScrollableTiledContainer";
 
 export function ScrollableTiledContainer({
     initial,
-    minWidth = 380,
+    width: minWidth,
 }: Props): ReactNode {
     const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
-    const [ref, bounds] = useMeasure();
+    const [viewportRef, bounds] = useMeasure();   // gives us bounds.width
 
-    // adds or replaces the rightmost pane
+    useEffect(() => {
+        setPanes(initial);        // replace the stack with the new initial panes
+    }, [initial]);
+
+    /**
+     *  Passed to every pane renderer so it can request navigation.
+     *   – Appends the pane when its `id` is new.
+     *   – Otherwise keeps panes up to (and including) the matching `id`,
+     *     effectively replacing everything to its right.
+     */
     const openPane = useCallback(
         (next: ScrollableTiledPaneData) =>
             setPanes((prev) => {
@@ -40,22 +51,41 @@ export function ScrollableTiledContainer({
         [],
     );
 
-
     const paneWidth =
-        bounds.width >= minWidth * panes.length
-            ? bounds.width / panes.length
+        bounds.width && panes.length * minWidth <= bounds.width
+            ? Math.floor(bounds.width / panes.length)
             : minWidth;
 
+    const totalWidth = minWidth * panes.length;   // used only for slide maths
+    const offset = Math.max(0, totalWidth - bounds.width); // px to slide left
+
+    const [first, ...rest] = panes;
+
+    const renderPane = (
+        p: ScrollableTiledPaneData,
+        extraStyle: CSSProperties = {}
+    ) => (
+        <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
+            {typeof p.element === "function"
+                ? (p.element as ScrollableTiledPaneRenderer)({openPane})
+                : p.element}
+        </ScrollableTiledPane>
+    );
+
+    const slideStyle: CSSProperties = {
+        transform: `translateX(-${offset}px)`,
+        transition: 'transform 300ms ease-out',
+        willChange: 'transform',
+    };
+
     return (
-        <div ref={ref} style={viewportStyle}>
-            <div style={trackStyle}>
-                {panes.map((p) => (
-                    <ScrollableTiledPane key={p.id} width={paneWidth}>
-                        {typeof p.element === "function"
-                            ? (p.element as ScrollableTiledPaneRenderer)({openPane})
-                            : p.element}
-                    </ScrollableTiledPane>
-                ))}
+        <div ref={viewportRef} style={viewportStyle}>
+            {first && renderPane(first, offset > 0 ? { position: 'absolute' } : undefined)}
+            <div
+                data-testid="track"
+                style={{ ...trackStyle, left: paneWidth, ...slideStyle }}
+            >
+                {rest.map((pane) => renderPane(pane))}
             </div>
         </div>
     );
