@@ -1,8 +1,10 @@
 import { forwardRef, PropsWithChildren, ReactNode } from "react";
 
+export type PaneRenderer = (args: { openPane: (next: PaneData) => void }) => ReactNode;
+
 export interface PaneData {
-    id: string
-    element: ReactNode
+    id: string;
+    element: ReactNode | PaneRenderer;
 }
 
 type Props = PropsWithChildren<{

@@ -1,6 +1,6 @@
 import { FC, useCallback, useLayoutEffect, useState } from "react";
 import useMeasure from "react-use-measure";
-import { Pane, PaneData } from "./Pane";
+import { Pane, PaneData, PaneRenderer } from "./Pane";
 
 interface Props {
     initial: PaneData[];
@@ -50,7 +50,7 @@ export const TilingPanes: FC<Props> = ({
                 {panes.map((p) => (
                     <Pane key={p.id} width={paneWidth}>
                         {typeof p.element === "function"
-                            ? (p.element as any)({openPane})
+                            ? (p.element as PaneRenderer)({ openPane })
                             : p.element}
                     </Pane>
                 ))}
