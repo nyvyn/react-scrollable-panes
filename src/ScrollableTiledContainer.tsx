@@ -13,7 +13,6 @@ const viewportStyle: CSSProperties = {
 
 const trackStyle: CSSProperties = {
     position: "absolute",
-    right: "0",
     display: "flex",
     flexDirection: "row",
     height: "100%",
@@ -52,7 +51,6 @@ export function ScrollableTiledContainer({
     const offset = Math.max(0, totalWidth - bounds.width); // px to slide left
 
     const [first, ...rest] = panes;
-    const left = width - totalWidth - bounds.width;
 
     const renderPane = (p: ScrollableTiledPaneData) => (
         <ScrollableTiledPane key={p.id} width={width}>
@@ -62,14 +60,14 @@ export function ScrollableTiledContainer({
         </ScrollableTiledPane>
     );
 
-    // Build dynamic style for the track, only including slide-related properties when slide is true
-    const slideStyle: CSSProperties = {
-        ...({
-            transform: `translateX(-${left}px)`,
-            transition: "transform 300ms ease-out",
-            willChange: "transform",
-        }),
-    };
+    const slideStyle: CSSProperties =
+        offset > 0
+            ? {
+                  transform: `translateX(-${offset}px)`,
+                  transition: "transform 300ms ease-out",
+                  willChange: "transform",
+              }
+            : {};
 
     return (
         <div ref={viewportRef} style={viewportStyle}>
@@ -78,7 +76,7 @@ export function ScrollableTiledContainer({
             )}
             <div
                 data-testid="track"
-                style={{...trackStyle, ...slideStyle}}
+                style={{ ...trackStyle, left: width, ...slideStyle }}
             >
                 {rest.map(renderPane)}
             </div>
