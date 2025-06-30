@@ -60,14 +60,16 @@ export function ScrollableTiledContainer({
         </ScrollableTiledPane>
     );
 
-    const slideStyle: CSSProperties =
-        offset > 0
-            ? {
-                  transform: `translateX(-${offset}px)`,
-                  transition: "transform 300ms ease-out",
-                  willChange: "transform",
-              }
-            : {};
+    const slideStyle: CSSProperties = {
+        // always reflect the *current* offset
+        transform: `translateX(-${offset}px)`,
+
+        // add animation helpers only when we are actually sliding
+        ...(offset > 0 && {
+            transition: 'transform 300ms ease-out',
+            willChange: 'transform',
+        }),
+    };
 
     return (
         <div ref={viewportRef} style={viewportStyle}>
