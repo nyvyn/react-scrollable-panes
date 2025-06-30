@@ -1,0 +1,54 @@
+{
+  "name": "react-scrollable-tiles",
+  "version": "0.1.0",
+  "description": "Scrollable tiling pane library for React inspired by Andy Matuschak notes.",
+  "license": "MIT",
+  "author": "nyvyn",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nyvyn/react-scrollable-tiles.git"
+  },
+  "homepage": "https://github.com/nyvyn/react-scrollable-tiles#readme",
+  "keywords": [
+    "react",
+    "tiling",
+    "panes",
+    "scroll",
+    "andy-matuschak",
+    "tsx"
+  ],
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "test": "vitest",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "prepare": "husky install"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "dependencies": {
+    "react-use-measure": "^2.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.5.0",
+    "tsup": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "vitest": "^1.5.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
