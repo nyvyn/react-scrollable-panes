@@ -1,4 +1,4 @@
-import { CSSProperties, ReactNode, useCallback, useState } from "react";
+import { CSSProperties, ReactNode, useCallback, useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
 
@@ -32,6 +32,10 @@ export function ScrollableTiledContainer({
     const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
     const [viewportRef, bounds] = useMeasure();   // gives us bounds.width
 
+    useEffect(() => {
+        setPanes(initial);        // replace the stack with the new initial panes
+    }, [initial]);
+
     /**
      *  Passed to every pane renderer so it can request navigation.
      *   – Appends the pane when its `id` is new.
@@ -61,14 +65,9 @@ export function ScrollableTiledContainer({
     );
 
     const slideStyle: CSSProperties = {
-        // always reflect the *current* offset
         transform: `translateX(-${offset}px)`,
-
-        // add animation helpers only when we are actually sliding
-        ...(offset > 0 && {
-            transition: 'transform 300ms ease-out',
-            willChange: 'transform',
-        }),
+        transition: 'transform 300ms ease-out',
+        willChange: 'transform',
     };
 
     return (
