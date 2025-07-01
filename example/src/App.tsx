@@ -28,18 +28,19 @@ export default function App() {
   const listStyle: CSSProperties = {
     width: 220,
     margin: 0,
-    padding: "8px 0",
-    borderRight: "1px solid #ccc",   // NEW
-    listStyle: "none",               // remove bullets
-    display: "flex",                 // make rows explicit
+    padding: 0,
+    borderRight: "1px solid #ccc",
+    listStyle: "none",
+    display: "flex",
     flexDirection: "column",
     gap: 4,
   };
   const rowButton: CSSProperties = {
-    width: "100%",     // take up the whole row
+    width: "100%",
     textAlign: "left",
     padding: "8px 12px",
-    border: "none",
+    borderBottom: "1px solid #ccc",
+    outline: "none",
     background: "transparent",
     cursor: "pointer",
   };
@@ -57,7 +58,7 @@ export default function App() {
       </ul>
 
       {/* the panes that are currently open */}
-      <ScrollableTiledContainer initial={open} width={380} />
+      <ScrollableTiledContainer initial={open} width={500} />
     </div>
   );
 }
