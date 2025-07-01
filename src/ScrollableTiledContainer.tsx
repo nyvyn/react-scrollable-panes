@@ -55,12 +55,18 @@ export function ScrollableTiledContainer({
 
     const paneWidth = Math.min(width, bounds.width);
 
+    /**
+     *  Calculates how many tabs should be collapsed into vertical tabs when panes exceed available width.
+     *   - Incrementally collapses panes from the left into vertical tabs
+     *   - Each collapsed pane frees up tabWidth pixels of space
+     *   - Stops when remaining panes can fit within available width with at most paneWidth overflow
+     */
     let leftTabs = 0;
     let available = bounds.width;
     while (leftTabs < panes.length - 1) {
         const remaining = panes.length - leftTabs;
         const overflow = paneWidth * remaining - available;
-        if (overflow <= paneWidth) break;
+        if (overflow <= paneWidth - tabWidth) break;
         leftTabs += 1;
         available -= tabWidth;
     }
