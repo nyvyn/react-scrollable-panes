@@ -35,13 +35,23 @@ export default function App() {
     flexDirection: "column",
     gap: 4,
   };
+  const rowButton: CSSProperties = {
+    width: "100%",     // take up the whole row
+    textAlign: "left",
+    padding: "8px 12px",
+    border: "none",
+    background: "transparent",
+    cursor: "pointer",
+  };
 
   return (
     <div style={layout}>
       <ul style={listStyle}>
         {notes.map(n => (
           <li key={n.id} style={{ margin: 0 }}>
-            <button onClick={() => addNote(n)}>{n.title}</button>
+            <button style={rowButton} onClick={() => addNote(n)}>
+              {n.title}
+            </button>
           </li>
         ))}
       </ul>
