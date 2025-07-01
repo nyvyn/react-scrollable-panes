@@ -1,5 +1,5 @@
 # react-scrollable-panes
-Scrollable horizontally-tiled panes for React.
+Beautiful, scrollable horizontally tiled panes for React.
 
 ## Installation
 ```bash
@@ -8,14 +8,16 @@ npm i react-scrollable-panes
 
 ## Quick-start
 ```tsx
-import { ScrollableTiledContainer, PaneData } from 'react-scrollable-panes';
+import { ScrollableTiledContainer, ScrollableTiledPaneData } from 'react-scrollable-panes';
 
-const initial: PaneData[] = [
+const initial: ScrollableTiledPaneData[] = [
   {
     id: 'home',
+    title: 'Home',
     element: ({ openPane }) => (
       <button onClick={() => openPane({
         id: 'details',
+        title: 'Details',
         element: <div>Details pane</div>
       })}>
         Open details
@@ -31,30 +33,35 @@ function App() {
 
 ## API
 ### `ScrollableTiledContainer`
-| Prop        | Type        | Default | Description                                                     |
-|-------------|-------------|---------|-----------------------------------------------------------------|
-| `initial`   | `PaneData[]`| –       | Panes shown when the component mounts.                          |
-| `minWidth?` | `number`    | `380`   | Minimum pixel width a pane may occupy before horizontal scrolling is enabled. |
 
-### `PaneData`
+| Prop        | Type                          | Default | Description                                                     |
+|-------------|-------------------------------|---------|-----------------------------------------------------------------|
+| `initial`   | `ScrollableTiledPaneData[]`   | –       | Panes shown when the component mounts.                          |
+| `width?`    | `number`                      | `380`   | Minimum pixel width a pane may occupy before horizontal scrolling is enabled. |
+
+### `ScrollableTiledPaneData`
 ```ts
-interface PaneData {
+interface ScrollableTiledPaneData {
   id: string;
-  element: ReactNode | PaneRenderer;
+  title: string;
+  element: ReactNode | ScrollableTiledPaneRenderer;
 }
 ```
 
-### `PaneRenderer`
+### `ScrollableTiledPaneRenderer`
 ```ts
-type PaneRenderer = (args: { openPane: (next: PaneData) => void }) => ReactNode;
+type ScrollableTiledPaneRenderer = (args: {
+  openPane: (next: ScrollableTiledPaneData) => void;
+}) => ReactNode;
 ```
 
 Calling `openPane(next)` appends *next* to the right of the calling pane and removes any panes that were further right.
 
 ## Behaviour
+
 • All panes share available width equally.  
-• If equal division would give any pane `< minWidth`, panes keep `minWidth` and the container becomes horizontally scrollable.  
-• `openPane` automatically scrolls the new pane into view.
+• If equal division would give any pane `< width`, panes keep `width` and the container becomes horizontally scrollable.  
+• `openPane` automatically scrolls the new pane into view, passing the new `ScrollableTiledPaneData` to any `ScrollableTiledPaneRenderer`.
 
 ## Contributing
 PRs and issues are welcome. Run the dev setup with:
@@ -63,6 +70,10 @@ PRs and issues are welcome. Run the dev setup with:
 pnpm install
 pnpm test
 ```
+
+## Acknowledgements
+
+This project’s horizontally tiled-pane interaction model is inspired by Andy Matuschak’s notes system.
 
 ## License
 MIT

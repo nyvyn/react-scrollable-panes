@@ -10,8 +10,9 @@ type OpenPane = (next: ScrollableTiledPaneData) => void;
 
 const makeOpenerPane = (id: string, nextId: string, nextElement: ReactNode) => ({
   id,
+  title: id,
   element: ({ openPane }: { openPane: OpenPane }) => (
-    <button onClick={() => openPane({ id: nextId, element: nextElement })}>
+    <button onClick={() => openPane({ id: nextId, title: nextId, element: nextElement })}>
       {`open ${nextId}`}
     </button>
   ),
@@ -49,7 +50,7 @@ it('slides panes over the first when width is limited', async () => {
   const user = userEvent.setup();
   const minWidth = 300;
 
-  const paneC = { id: 'C', element: <span>C-content</span> };
+  const paneC = { id: 'C', title: 'C', element: <span>C-content</span> };
   const paneB = makeOpenerPane('B', 'C', <span>C-content</span>);
   paneB.element = ({ openPane }: { openPane: OpenPane }) => (
     <button onClick={() => openPane(paneC)}>open C</button>
@@ -58,6 +59,7 @@ it('slides panes over the first when width is limited', async () => {
   const initial = [
     {
       id: 'A',
+      title: 'A',
       element: ({ openPane }: { openPane: OpenPane }) => (
         <button onClick={() => openPane(paneB)}>open B</button>
       ),
@@ -76,4 +78,41 @@ it('slides panes over the first when width is limited', async () => {
 
   const track = screen.getByTestId('track');
   expect(track).toHaveStyle({ transform: 'translateX(-100px)' });
+});
+
+it('creates vertical tabs when panes exceed available width', async () => {
+  const user = userEvent.setup();
+  const width = 300;
+
+  const paneD = { id: 'D', title: 'D', element: <span>D-content</span> };
+  const paneC = makeOpenerPane('C', 'D', <span>D-content</span>);
+  paneC.element = ({ openPane }: { openPane: OpenPane }) => (
+    <button onClick={() => openPane(paneD)}>open D</button>
+  );
+  const paneB = makeOpenerPane('B', 'C', <span>C-content</span>);
+  paneB.element = ({ openPane }: { openPane: OpenPane }) => (
+    <button onClick={() => openPane(paneC)}>open C</button>
+  );
+
+  const initial = [
+    {
+      id: 'A',
+      title: 'A',
+      element: ({ openPane }: { openPane: OpenPane }) => (
+        <button onClick={() => openPane(paneB)}>open B</button>
+      ),
+    },
+  ];
+
+  render(<ScrollableTiledContainer initial={initial} width={width} />);
+
+  await user.click(screen.getByRole('button', { name: /open B/i }));
+  await user.click(screen.getByRole('button', { name: /open C/i }));
+  await user.click(screen.getByRole('button', { name: /open D/i }));
+
+  expect(screen.getAllByTestId('pane')).toHaveLength(3);
+  expect(screen.getAllByTestId('tab')).toHaveLength(1);
+
+  const track = screen.getByTestId('track');
+  expect(track).toHaveStyle({ transform: 'translateX(-140px)' });
 });

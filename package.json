@@ -6,9 +6,9 @@
   "author": "nyvyn",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nyvyn/react-scrollable-tiles.git"
+    "url": "https://github.com/nyvyn/react-scrollable-panes.git"
   },
-  "homepage": "https://github.com/nyvyn/react-scrollable-tiles#readme",
+  "homepage": "https://github.com/nyvyn/react-scrollable-panes#readme",
   "keywords": ["react", "tiles", "panes", "scroll", "tsx"],
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",

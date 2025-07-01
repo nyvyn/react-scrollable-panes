@@ -1,6 +1,7 @@
 import { CSSProperties, ReactNode, useCallback, useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
+import { VerticalTab } from "./VerticalTab";
 
 const viewportStyle: CSSProperties = {
     display: "flex",
@@ -16,6 +17,8 @@ const trackStyle: CSSProperties = {
     flexDirection: "row",
     height: "100%",
 };
+
+const tabWidth = 40;
 
 interface Props {
     initial: ScrollableTiledPaneData[];
@@ -50,11 +53,28 @@ export function ScrollableTiledContainer({
         [],
     );
 
-    const [first, ...rest] = panes;
-
     const paneWidth = Math.min(width, bounds.width);
 
-    const offset = Math.max(0, paneWidth * panes.length - bounds.width);
+    /**
+     *  Calculates how many tabs should be collapsed into vertical tabs when panes exceed available width.
+     *   - Incrementally collapses panes from the left into vertical tabs
+     *   - Each collapsed pane frees up tabWidth pixels of space
+     *   - Stops when remaining panes can fit within available width with at most paneWidth overflow
+     */
+    let leftTabs = 0;
+    let available = bounds.width;
+    while (leftTabs < panes.length - 1) {
+        const remaining = panes.length - leftTabs;
+        const overflow = paneWidth * remaining - available;
+        if (overflow <= paneWidth - tabWidth) break;
+        leftTabs += 1;
+        available -= tabWidth;
+    }
+
+    const tabs = panes.slice(0, leftTabs);
+    const [first, ...rest] = panes.slice(leftTabs);
+
+    const offset = Math.max(0, paneWidth * (rest.length) - (available - paneWidth));
 
     const renderPane = (p: ScrollableTiledPaneData, extraStyle?: CSSProperties) => (
         <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
@@ -70,6 +90,7 @@ export function ScrollableTiledContainer({
 
         // add animation helpers only when we are actually sliding
         ...(offset > 0 && {
+            borderLeft: "1px solid rgba(0,0,0,0.05)",
             transition:
                 "box-shadow 100ms linear, opacity 75ms linear, " +
                 "transform 200ms cubic-bezier(0.19, 1, 0.22, 1)",
@@ -82,10 +103,16 @@ export function ScrollableTiledContainer({
 
     return (
         <div ref={viewportRef} style={viewportStyle}>
-            {first && renderPane(first, offset > 0 ? {position: "absolute"} : undefined)}
+            {tabs.map(t => (
+                <VerticalTab key={t.id} title={t.title} width={tabWidth}/>
+            ))}
+            {first &&
+                renderPane(first, offset > 0
+                    ? {position: "absolute", left: leftTabs * tabWidth}
+                    : {marginLeft: leftTabs * tabWidth})}
             <div
                 data-testid="track"
-                style={{...trackStyle, left: width, ...slideStyle}}
+                style={{...trackStyle, left: leftTabs * tabWidth + paneWidth, ...slideStyle}}
             >
                 {rest.map(p => renderPane(p))}
             </div>
