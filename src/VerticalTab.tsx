@@ -7,6 +7,7 @@ const baseStyle: CSSProperties = {
     justifyContent: "center",
     flexShrink: 0,
     boxShadow: "0 0 15px 3px rgba(0,0,0,0.05)",
+    scrollSnapAlign: "start",
 };
 
 const leftStyle: CSSProperties = {
@@ -33,7 +34,6 @@ export function VerticalTab({title, width, side = "left"}: Props) {
     const style: CSSProperties = {
         ...baseStyle,
         ...(side === "left" ? leftStyle : rightStyle),
-        scrollSnapAlign: "start",
         width,
     };
     return (
