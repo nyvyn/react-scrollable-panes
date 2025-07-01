@@ -1,7 +1,7 @@
 {
   "name": "react-scrollable-panes",
   "version": "0.1.0",
-  "description": "Scrollable tiled-pane library for React inspired by Andy Matuschak notes.",
+  "description": "Scrollable, stacking panes for React - inspired by Andy Matuschak notes.",
   "license": "MIT",
   "author": "nyvyn",
   "repository": {
