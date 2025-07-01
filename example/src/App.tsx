@@ -18,11 +18,10 @@ export default function App() {
   const [open, setOpen] = useState<SlipStackPaneData[]>([]);
 
   const addNote = (n: typeof notes[number]) =>
-    setOpen(p =>
-      p.find(x => x.id === n.id)
-        ? p
-        : [...p, { id: n.id, title: n.title, element: <NotePane title={n.title} body={n.body} /> }],
-    );
+      setOpen(p => [
+        ...p.filter(x => x.id !== n.id),
+        p.find(x => x.id === n.id) ?? { id: n.id, title: n.title, element: <NotePane title={n.title} body={n.body} /> },
+      ]);
 
   const layout: CSSProperties = {
     display: "flex",
