@@ -78,15 +78,25 @@ export function ScrollableTiledContainer({
     }, [panes.length, maxVisible]);
 
     const leftTabs = viewIndex;
-    const visibleCount = Math.max(1, Math.min(maxVisible, panes.length - leftTabs));
-    const rightTabs = Math.max(0, panes.length - leftTabs - visibleCount);
+    let visibleCount = Math.max(0, Math.min(maxVisible, panes.length - leftTabs));
+    let rightTabs = Math.max(0, panes.length - leftTabs - visibleCount);
+
+    let available = bounds.width - (leftTabs + rightTabs) * tabWidth;
+    let offset = paneWidth * visibleCount - available;
+
+    while (offset <= -(paneWidth - tabWidth) && (visibleCount > 1 || leftTabs > 0)) {
+        visibleCount -= 1;
+        rightTabs += 1;
+        available = bounds.width - (leftTabs + rightTabs) * tabWidth;
+        offset = paneWidth * visibleCount - available;
+    }
+
+    offset = Math.max(offset, -(paneWidth - tabWidth));
+    if (leftTabs === 0 && offset < 0) offset = 0;
 
     const tabs = panes.slice(0, leftTabs);
     const visible = panes.slice(leftTabs, leftTabs + visibleCount);
     const [first, ...rest] = visible;
-
-    const available = bounds.width - (leftTabs + rightTabs) * tabWidth;
-    const offset = Math.max(0, paneWidth * visibleCount - available);
 
     const renderPane = (p: ScrollableTiledPaneData, extraStyle?: CSSProperties) => (
         <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
@@ -98,7 +108,7 @@ export function ScrollableTiledContainer({
 
     const slideStyle: CSSProperties = {
         // always reflect the *current* offset
-        transform: `translateX(-${offset}px)`,
+        transform: `translateX(${ -offset }px)`,
 
         // add animation helpers only when we are actually sliding
         ...(offset > 0 && {
@@ -123,7 +133,7 @@ export function ScrollableTiledContainer({
             style={viewportStyle}
             onWheel={(e: WheelEvent<HTMLDivElement>) => {
                 if (e.deltaX > 0 || e.deltaY > 0) {
-                    setViewIndex((v) => Math.min(panes.length - maxVisible, v + 1));
+                    setViewIndex((v) => Math.min(panes.length, v + 1));
                 } else if (e.deltaX < 0 || e.deltaY < 0) {
                     setViewIndex((v) => Math.max(0, v - 1));
                 }
