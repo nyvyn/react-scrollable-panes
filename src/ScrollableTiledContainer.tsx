@@ -77,9 +77,14 @@ export function ScrollableTiledContainer({
         setViewIndex(panes.length - maxVisible);
     }, [panes.length, maxVisible]);
 
-    const leftTabs = viewIndex;
-    const visibleCount = Math.max(1, Math.min(maxVisible, panes.length - leftTabs));
-    const rightTabs = Math.max(0, panes.length - leftTabs - visibleCount);
+    const clampedIndex = Math.min(viewIndex, panes.length - 1);
+    const overscroll = Math.max(0, clampedIndex - (panes.length - maxVisible));
+    const rightTabs = overscroll;
+    const leftTabs = Math.max(0, clampedIndex - overscroll);
+    const visibleCount = Math.max(
+        1,
+        Math.min(maxVisible - overscroll, panes.length - leftTabs - rightTabs),
+    );
 
     const tabs = panes.slice(0, leftTabs);
     const visible = panes.slice(leftTabs, leftTabs + visibleCount);
@@ -123,7 +128,7 @@ export function ScrollableTiledContainer({
             style={viewportStyle}
             onWheel={(e: WheelEvent<HTMLDivElement>) => {
                 if (e.deltaX > 0 || e.deltaY > 0) {
-                    setViewIndex((v) => Math.min(panes.length - maxVisible, v + 1));
+                    setViewIndex((v) => Math.min(panes.length - 1, v + 1));
                 } else if (e.deltaX < 0 || e.deltaY < 0) {
                     setViewIndex((v) => Math.max(0, v - 1));
                 }
