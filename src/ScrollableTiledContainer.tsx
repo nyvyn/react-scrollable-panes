@@ -1,4 +1,11 @@
-import { CSSProperties, ReactNode, useCallback, useEffect, useState } from "react";
+import {
+    CSSProperties,
+    ReactNode,
+    useCallback,
+    useEffect,
+    useState,
+    WheelEvent,
+} from "react";
 import useMeasure from "react-use-measure";
 import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
 import { VerticalTab } from "./VerticalTab";
@@ -33,9 +40,11 @@ export function ScrollableTiledContainer({
 }: Props): ReactNode {
     const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
     const [viewportRef, bounds] = useMeasure();   // gives us bounds.width
+    const [viewIndex, setViewIndex] = useState(0);
 
     useEffect(() => {
         setPanes(initial);
+        setViewIndex(0);
     }, [initial]);
 
     /**
@@ -55,26 +64,27 @@ export function ScrollableTiledContainer({
 
     const paneWidth = Math.min(width, bounds.width);
 
-    /**
-     *  Calculates how many tabs should be collapsed into vertical tabs when panes exceed available width.
-     *   - Incrementally collapses panes from the left into vertical tabs
-     *   - Each collapsed pane frees up tabWidth pixels of space
-     *   - Stops when remaining panes can fit within available width with at most paneWidth overflow
-     */
-    let leftTabs = 0;
-    let available = bounds.width;
-    while (leftTabs < panes.length - 1) {
-        const remaining = panes.length - leftTabs;
-        const overflow = paneWidth * remaining - available;
-        if (overflow <= paneWidth - tabWidth) break;
-        leftTabs += 1;
-        available -= tabWidth;
-    }
+    const maxVisible = Math.max(1, Math.min(panes.length, Math.floor((bounds.width + (paneWidth - tabWidth)) / paneWidth)));
+
+    useEffect(() => {
+        setViewIndex((idx) => Math.min(Math.max(0, panes.length - maxVisible), idx));
+    }, [maxVisible]);
+
+    // keep newest panes visible
+    useEffect(() => {
+        setViewIndex(panes.length - maxVisible);
+    }, [panes.length, maxVisible]);
+
+    const leftTabs = viewIndex;
+    const visibleCount = Math.max(1, Math.min(maxVisible, panes.length - leftTabs));
+    const rightTabs = Math.max(0, panes.length - leftTabs - visibleCount);
 
     const tabs = panes.slice(0, leftTabs);
-    const [first, ...rest] = panes.slice(leftTabs);
+    const visible = panes.slice(leftTabs, leftTabs + visibleCount);
+    const [first, ...rest] = visible;
 
-    const offset = Math.max(0, paneWidth * (rest.length) - (available - paneWidth));
+    const available = bounds.width - (leftTabs + rightTabs) * tabWidth;
+    const offset = Math.max(0, paneWidth * visibleCount - available);
 
     const renderPane = (p: ScrollableTiledPaneData, extraStyle?: CSSProperties) => (
         <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
@@ -101,21 +111,36 @@ export function ScrollableTiledContainer({
         }),
     };
 
+    const rightTabsElements = panes.slice(leftTabs + visibleCount).map(t => (
+        <VerticalTab key={t.id} title={t.title} width={tabWidth} side="right" />
+    ));
+
     return (
-        <div ref={viewportRef} style={viewportStyle}>
+        <div
+            ref={viewportRef}
+            style={viewportStyle}
+            onWheel={(e: WheelEvent<HTMLDivElement>) => {
+                if (e.deltaX > 0 || e.deltaY > 0) {
+                    setViewIndex((v) => Math.min(panes.length - maxVisible, v + 1));
+                } else if (e.deltaX < 0 || e.deltaY < 0) {
+                    setViewIndex((v) => Math.max(0, v - 1));
+                }
+            }}
+        >
             {tabs.map(t => (
-                <VerticalTab key={t.id} title={t.title} width={tabWidth}/>
+                <VerticalTab key={t.id} title={t.title} width={tabWidth} />
             ))}
             {first &&
                 renderPane(first, offset > 0
-                    ? {position: "absolute", left: leftTabs * tabWidth}
-                    : {marginLeft: leftTabs * tabWidth})}
+                    ? { position: "absolute", left: leftTabs * tabWidth }
+                    : { marginLeft: leftTabs * tabWidth })}
             <div
                 data-testid="track"
-                style={{...trackStyle, left: leftTabs * tabWidth + paneWidth, ...slideStyle}}
+                style={{ ...trackStyle, left: leftTabs * tabWidth + paneWidth, ...slideStyle }}
             >
                 {rest.map(p => renderPane(p))}
             </div>
+            {rightTabsElements}
         </div>
     );
 }
