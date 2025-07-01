@@ -21,7 +21,7 @@ export default function App() {
     setOpen(p =>
       p.find(x => x.id === n.id)
         ? p
-        : [...p, { id: n.id, title: n.title, element: <div style={noteStyle}>{n.body}</div> }],
+        : [...p, { id: n.id, title: n.title, element: <NotePane title={n.title} body={n.body} /> }],
     );
 
   const layout: CSSProperties = { display: "flex", height: "100vh" };
@@ -48,6 +48,13 @@ export default function App() {
     padding: "16px",
     height: "100%",
   };
+
+  const NotePane = ({ title, body }: { title: string; body: string }) => (
+    <div style={noteStyle}>
+      <h2 style={{ margin: 0, marginBottom: 8, fontSize: 18 }}>{title}</h2>
+      <div>{body}</div>
+    </div>
+  );
 
   return (
     <div style={layout}>
