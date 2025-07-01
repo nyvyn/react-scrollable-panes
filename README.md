@@ -8,9 +8,9 @@ npm i react-scrollable-panes
 
 ## Quick-start
 ```tsx
-import { ScrollableTiledContainer, PaneData } from 'react-scrollable-panes';
+import { ScrollableTiledContainer, ScrollableTiledPaneData } from 'react-scrollable-panes';
 
-const initial: PaneData[] = [
+const initial: ScrollableTiledPaneData[] = [
   {
     id: 'home',
     title: 'Home',
@@ -34,24 +34,25 @@ function App() {
 ## API
 ### `ScrollableTiledContainer`
 
-| Prop        | Type        | Default | Description                                                     |
-|-------------|-------------|---------|-----------------------------------------------------------------|
-| `initial`   | `PaneData[]`| –       | Panes shown when the component mounts.                          |
-| `width?`    | `number`    | `380`   | Minimum pixel width a pane may occupy before horizontal scrolling is enabled. |
+| Prop        | Type                          | Default | Description                                                     |
+|-------------|-------------------------------|---------|-----------------------------------------------------------------|
+| `initial`   | `ScrollableTiledPaneData[]`   | –       | Panes shown when the component mounts.                          |
+| `width?`    | `number`                      | `380`   | Minimum pixel width a pane may occupy before horizontal scrolling is enabled. |
 
-### `PaneData`
-
+### `ScrollableTiledPaneData`
 ```ts
-interface PaneData {
+interface ScrollableTiledPaneData {
   id: string;
   title: string;
-  element: ReactNode | PaneRenderer;
+  element: ReactNode | ScrollableTiledPaneRenderer;
 }
 ```
 
-### `PaneRenderer`
+### `ScrollableTiledPaneRenderer`
 ```ts
-type PaneRenderer = (args: { openPane: (next: PaneData) => void }) => ReactNode;
+type ScrollableTiledPaneRenderer = (args: {
+  openPane: (next: ScrollableTiledPaneData) => void;
+}) => ReactNode;
 ```
 
 Calling `openPane(next)` appends *next* to the right of the calling pane and removes any panes that were further right.
