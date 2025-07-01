@@ -1,5 +1,5 @@
 # react-scrollable-panes
-Scrollable horizontally-tiled panes for React.
+Beautiful, scrollable horizontally tiled panes for React.
 
 ## Installation
 ```bash
@@ -73,7 +73,7 @@ pnpm test
 
 ## Acknowledgements
 
-This project’s tiled-pane interaction model is inspired by Andy Matuschak’s notes system.
+This project’s horizontally tiled-pane interaction model is inspired by Andy Matuschak’s notes system.
 
 ## License
 MIT
