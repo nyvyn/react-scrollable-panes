@@ -61,7 +61,7 @@ Calling `openPane(next)` appends *next* to the right of the calling pane and rem
 
 • All panes share available width equally.  
 • If equal division would give any pane `< width`, panes keep `width` and the container becomes horizontally scrollable.  
-• `openPane` automatically scrolls the new pane into view.
+• `openPane` automatically scrolls the new pane into view, passing the new `ScrollableTiledPaneData` to any `ScrollableTiledPaneRenderer`.
 
 ## Contributing
 PRs and issues are welcome. Run the dev setup with:
