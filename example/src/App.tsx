@@ -44,7 +44,10 @@ export default function App() {
     background: "transparent",
     cursor: "pointer",
   };
-  const noteStyle: CSSProperties = { padding: "16px" };   // NEW
+  const noteStyle: CSSProperties = {
+    padding: "16px",
+    height: "100%",
+  };
 
   return (
     <div style={layout}>
