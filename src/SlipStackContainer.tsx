@@ -1,4 +1,4 @@
-import { CSSProperties, ReactNode, useCallback, useEffect, useState, WheelEvent, } from "react";
+import { CSSProperties, ReactNode, useCallback, useEffect, useState, } from "react";
 import useMeasure from "react-use-measure";
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "./SlipStackPane";
 import { SlipStackTab } from "./SlipStackTab";
