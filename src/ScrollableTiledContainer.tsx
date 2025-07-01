@@ -18,7 +18,7 @@ const trackStyle: CSSProperties = {
     height: "100%",
 };
 
-const tabWidth = 20;
+const tabWidth = 40;
 
 interface Props {
     initial: ScrollableTiledPaneData[];
@@ -84,6 +84,7 @@ export function ScrollableTiledContainer({
 
         // add animation helpers only when we are actually sliding
         ...(offset > 0 && {
+            borderLeft: "1px solid rgba(0,0,0,0.05)",
             transition:
                 "box-shadow 100ms linear, opacity 75ms linear, " +
                 "transform 200ms cubic-bezier(0.19, 1, 0.22, 1)",
@@ -97,15 +98,15 @@ export function ScrollableTiledContainer({
     return (
         <div ref={viewportRef} style={viewportStyle}>
             {tabs.map(t => (
-                <VerticalTab key={t.id} title={t.title} />
+                <VerticalTab key={t.id} title={t.title} width={tabWidth}/>
             ))}
             {first &&
                 renderPane(first, offset > 0
-                    ? { position: "absolute", left: leftTabs * tabWidth }
-                    : { marginLeft: leftTabs * tabWidth })}
+                    ? {position: "absolute", left: leftTabs * tabWidth}
+                    : {marginLeft: leftTabs * tabWidth})}
             <div
                 data-testid="track"
-                style={{ ...trackStyle, left: leftTabs * tabWidth + paneWidth, ...slideStyle }}
+                style={{...trackStyle, left: leftTabs * tabWidth + paneWidth, ...slideStyle}}
             >
                 {rest.map(p => renderPane(p))}
             </div>

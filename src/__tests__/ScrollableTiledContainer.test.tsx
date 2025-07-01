@@ -114,5 +114,5 @@ it('creates vertical tabs when panes exceed available width', async () => {
   expect(screen.getAllByTestId('tab')).toHaveLength(1);
 
   const track = screen.getByTestId('track');
-  expect(track).toHaveStyle({ transform: 'translateX(-120px)' });
+  expect(track).toHaveStyle({ transform: 'translateX(-140px)' });
 });
