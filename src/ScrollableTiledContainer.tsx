@@ -78,8 +78,20 @@ export function ScrollableTiledContainer({
     }, [panes.length, maxVisible]);
 
     const leftTabs = viewIndex;
-    const visibleCount = Math.max(1, Math.min(maxVisible, panes.length - leftTabs));
-    const rightTabs = Math.max(0, panes.length - leftTabs - visibleCount);
+
+    // allow panes on the right to slide off screen until only a tab's width
+    // remains visible before converting them into right side tabs
+    let availableWidth = bounds.width - leftTabs * tabWidth;
+    let remaining = panes.length - leftTabs;
+    let rightTabs = 0;
+    while (remaining > 1) {
+        const overflow = paneWidth * remaining - availableWidth;
+        if (overflow <= paneWidth - tabWidth) break;
+        rightTabs += 1;
+        remaining -= 1;
+        availableWidth -= tabWidth;
+    }
+    const visibleCount = Math.max(1, remaining);
 
     const tabs = panes.slice(0, leftTabs);
     const visible = panes.slice(leftTabs, leftTabs + visibleCount);
