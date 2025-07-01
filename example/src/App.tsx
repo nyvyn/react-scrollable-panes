@@ -1,5 +1,5 @@
 import { useState, CSSProperties } from "react";
-import { ScrollableTiledContainer, ScrollableTiledPaneData } from 'react-scrollable-panes';
+import { ScrollableTiledContainer, ScrollableTiledPaneData } from 'slipstack';
 
 const notes = [
   { id: "note-1",  title: "Shopping list",  body: "Milk, Eggs, Bread…" },

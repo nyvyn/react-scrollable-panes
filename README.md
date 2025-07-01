@@ -1,14 +1,14 @@
-# react-scrollable-panes
-Beautiful, scrollable horizontally tiled panes for React.
+# SlipStack
+Beautiful, sliding, stacking panes for React.
 
 ## Installation
 ```bash
-npm i react-scrollable-panes
+npm i slipstack
 ```
 
 ## Quick-start
 ```tsx
-import { ScrollableTiledContainer, ScrollableTiledPaneData } from 'react-scrollable-panes';
+import { ScrollableTiledContainer, ScrollableTiledPaneData } from 'slipstack';
 
 const initial: ScrollableTiledPaneData[] = [
   {

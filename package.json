@@ -1,15 +1,15 @@
 {
-  "name": "react-scrollable-panes",
+  "name": "slipstack",
   "version": "0.1.0",
-  "description": "Scrollable, stacking panes for React - inspired by Andy Matuschak notes.",
+  "description": "Beautiful, sliding, stacking panes for React – inspired by Andy Matuschak’s sliding-pane notes UI.",
   "license": "MIT",
   "author": "nyvyn",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nyvyn/react-scrollable-panes.git"
+    "url": "https://github.com/nyvyn/slipstack.git"
   },
-  "homepage": "https://github.com/nyvyn/react-scrollable-panes#readme",
-  "keywords": ["react", "tiles", "panes", "scroll", "tsx"],
+  "homepage": "https://github.com/nyvyn/slipstack#readme",
+  "keywords": ["react", "tiles", "panes", "scroll", "tsx", "slipstack", "sliding"],
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
