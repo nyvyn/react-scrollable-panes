@@ -24,8 +24,13 @@ export default function App() {
         : [...p, { id: n.id, title: n.title, element: <NotePane title={n.title} body={n.body} /> }],
     );
 
-  const layout: CSSProperties = { display: "flex", height: "100vh" };
+  const layout: CSSProperties = {
+    display: "flex",
+    height: "100vh",
+    backgroundColor: "#f5f5f5",
+  };
   const listStyle: CSSProperties = {
+    backgroundColor: "#fff",
     width: 220,
     margin: 0,
     padding: 0,
