@@ -1,33 +1,34 @@
-# react-scrollable-panes
-Beautiful, scrollable horizontally tiled panes for React.
+# SlipStack
+Beautiful, sliding, stacking panes for React.
 
 ## Installation
 ```bash
-npm i react-scrollable-panes
+npm i slipstack-react
 ```
 
 ## Quick-start
-```tsx
-import { ScrollableTiledContainer, ScrollableTiledPaneData } from 'react-scrollable-panes';
 
-const initial: ScrollableTiledPaneData[] = [
-  {
-    id: 'home',
-    title: 'Home',
-    element: ({ openPane }) => (
-      <button onClick={() => openPane({
-        id: 'details',
-        title: 'Details',
-        element: <div>Details pane</div>
-      })}>
-        Open details
-      </button>
-    )
-  }
+```tsx
+import { SlipStackContainer, SlipStackPaneData } from "slipstack-react";
+
+const initial: SlipStackPaneData[] = [
+    {
+        id: "home",
+        title: "Home",
+        element: ({openPane}) => (
+            <button onClick={() => openPane({
+                id: "details",
+                title: "Details",
+                element: <div>Details pane</div>
+            })}>
+                Open details
+            </button>
+        )
+    }
 ];
 
 function App() {
-  return <ScrollableTiledContainer initial={initial} />;
+    return <SlipStackContainer initial={initial} width={500}/>;
 }
 ```
 
@@ -36,31 +37,34 @@ Run the demo application from the `example` folder:
 
 ```bash
 cd example
-pnpm install
-pnpm dev
+npm install
+npm dev
 ```
 
 ## API
-### `ScrollableTiledContainer`
+### `SlipStackContainer`
 
-| Prop        | Type                          | Default | Description                                                     |
-|-------------|-------------------------------|---------|-----------------------------------------------------------------|
-| `initial`   | `ScrollableTiledPaneData[]`   | –       | Panes shown when the component mounts.                          |
-| `width?`    | `number`                      | `380`   | Minimum pixel width a pane may occupy before horizontal scrolling is enabled. |
+| Prop        | Type                  | Default | Description                            |
+|-------------|-----------------------|---------|----------------------------------------|
+| `initial`   | `SlipStackPaneData[]` | –       | Panes shown when the component mounts. |
+| `width?`    | `number`              | `380`   | Maximum width of each pane.            |
 
-### `ScrollableTiledPaneData`
+### `SlipStackPaneData`
+
 ```ts
-interface ScrollableTiledPaneData {
-  id: string;
-  title: string;
-  element: ReactNode | ScrollableTiledPaneRenderer;
+import { SlipStackPaneRenderer } from "./SlipStackPane";
+
+interface SlipStackPaneData {
+    id: string;
+    title: string;
+    element: ReactNode | SlipStackPaneRenderer;
 }
 ```
 
-### `ScrollableTiledPaneRenderer`
+### `SlipStackPaneRenderer`
 ```ts
-type ScrollableTiledPaneRenderer = (args: {
-  openPane: (next: ScrollableTiledPaneData) => void;
+type SlipStackPaneRenderer = (args: {
+  openPane: (next: SlipStackPaneData) => void;
 }) => ReactNode;
 ```
 
@@ -70,14 +74,15 @@ Calling `openPane(next)` appends *next* to the right of the calling pane and rem
 
 • All panes share available width equally.  
 • If equal division would give any pane `< width`, panes keep `width` and the container becomes horizontally scrollable.  
-• `openPane` automatically scrolls the new pane into view, passing the new `ScrollableTiledPaneData` to any `ScrollableTiledPaneRenderer`.
+• `openPane` automatically scrolls the new pane into view, passing the new `SlipStackPaneData` to any 
+`SlipStackPaneRenderer`.
 
 ## Contributing
 PRs and issues are welcome. Run the dev setup with:
 
 ```bash
-pnpm install
-pnpm test
+npm install
+npm test
 ```
 
 ## Acknowledgements

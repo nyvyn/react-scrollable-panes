@@ -2,11 +2,11 @@ import "../../tests/helpers/mockUseMeasure"; // ← registers the react-use-meas
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ReactNode } from "react";
-import { ScrollableTiledContainer } from "../ScrollableTiledContainer";
+import { SlipStackContainer } from "../SlipStackContainer";
 
-import type { ScrollableTiledPaneData } from "../ScrollableTiledPane";
+import type { SlipStackPaneData } from "../SlipStackPane";
 
-type OpenPane = (next: ScrollableTiledPaneData) => void;
+type OpenPane = (next: SlipStackPaneData) => void;
 
 const makeOpenerPane = (id: string, nextId: string, nextElement: ReactNode) => ({
     id,
@@ -27,7 +27,7 @@ it("appends a new pane and recalculates pane widths", async () => {
         makeOpenerPane("A", "B", <span>B-content</span>),
     ];
 
-    render(<ScrollableTiledContainer initial={initial} width={width}/>);
+    render(<SlipStackContainer initial={initial} width={width}/>);
 
     // → initially exactly one .pane with full width (= 800 px from mock)
     let panes = screen.getAllByTestId("pane");
@@ -66,7 +66,7 @@ it("slides panes over the first when width is limited", async () => {
         },
     ];
 
-    render(<ScrollableTiledContainer initial={initial} width={minWidth}/>);
+    render(<SlipStackContainer initial={initial} width={minWidth}/>);
 
     await user.click(screen.getByRole("button", {name: /open B/i}));
     await user.click(screen.getByRole("button", {name: /open C/i}));
@@ -104,7 +104,7 @@ it("creates vertical tabs when panes exceed available width", async () => {
         },
     ];
 
-    render(<ScrollableTiledContainer initial={initial} width={width}/>);
+    render(<SlipStackContainer initial={initial} width={width}/>);
 
     await user.click(screen.getByRole("button", {name: /open B/i}));
     await user.click(screen.getByRole("button", {name: /open C/i}));

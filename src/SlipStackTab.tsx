@@ -30,7 +30,7 @@ interface Props {
     side?: "left" | "right";
 }
 
-export function VerticalTab({title, width, side = "left"}: Props) {
+export function SlipStackTab({title, width, side = "left"}: Props) {
     const style: CSSProperties = {
         ...baseStyle,
         ...(side === "left" ? leftStyle : rightStyle),

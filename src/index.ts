@@ -1,2 +1,2 @@
-export { ScrollableTiledContainer } from "./ScrollableTiledContainer";
-export type { ScrollableTiledPaneData } from "./ScrollableTiledPane";
+export { SlipStackContainer } from "./SlipStackContainer";
+export type { SlipStackPaneData } from "./SlipStackPane";
