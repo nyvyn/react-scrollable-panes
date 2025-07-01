@@ -33,6 +33,7 @@ export function VerticalTab({title, width, side = "left"}: Props) {
     const style: CSSProperties = {
         ...baseStyle,
         ...(side === "left" ? leftStyle : rightStyle),
+        scrollSnapAlign: "start",
         width,
     };
     return (

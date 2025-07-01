@@ -14,7 +14,9 @@ const viewportStyle: CSSProperties = {
     display: "flex",
     flex: "1",
     width: "100%",
-    overflow: "hidden",
+    overflow: "hidden",                // keep clipping everything
+    scrollSnapType: "x mandatory",     // activate horizontal snap
+    scrollBehavior: "smooth",          // smooth programmatic motion
     position: "relative",
 };
 
