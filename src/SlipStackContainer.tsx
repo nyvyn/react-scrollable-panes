@@ -7,8 +7,8 @@ import {
     WheelEvent,
 } from "react";
 import useMeasure from "react-use-measure";
-import { ScrollableTiledPane, ScrollableTiledPaneData, ScrollableTiledPaneRenderer } from "./ScrollableTiledPane";
-import { VerticalTab } from "./VerticalTab";
+import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "./SlipStackPane";
+import { SlipStackTab } from "./SlipStackTab";
 
 const viewportStyle: CSSProperties = {
     position: "relative",
@@ -30,17 +30,17 @@ const trackStyle: CSSProperties = {
 const tabWidth = 40;
 
 interface Props {
-    initial: ScrollableTiledPaneData[];
+    initial: SlipStackPaneData[];
     width: number;           // minimum width for a single pane (px)
 }
 
-ScrollableTiledContainer.displayName = "ScrollableTiledContainer";
+SlipStackContainer.displayName = "SlipStackContainer";
 
-export function ScrollableTiledContainer({
+export function SlipStackContainer({
     initial,
     width,
 }: Props): ReactNode {
-    const [panes, setPanes] = useState<ScrollableTiledPaneData[]>(initial);
+    const [panes, setPanes] = useState<SlipStackPaneData[]>(initial);
     const [viewportRef, bounds] = useMeasure();   // gives us bounds.width
     const [viewIndex, setViewIndex] = useState(0);
 
@@ -56,7 +56,7 @@ export function ScrollableTiledContainer({
      *     effectively replacing everything to its right.
      */
     const openPane = useCallback(
-        (next: ScrollableTiledPaneData) =>
+        (next: SlipStackPaneData) =>
             setPanes((prev) => {
                 const i = prev.findIndex((p: { id: string; }) => p.id === next.id);
                 return i === -1 ? [...prev, next] : [...prev.slice(0, i + 1)];
@@ -88,12 +88,12 @@ export function ScrollableTiledContainer({
     const available = bounds.width - (leftTabs + rightTabs) * tabWidth;
     const offset = Math.max(0, paneWidth * visibleCount - available);
 
-    const renderPane = (p: ScrollableTiledPaneData, extraStyle?: CSSProperties) => (
-        <ScrollableTiledPane key={p.id} width={paneWidth} style={extraStyle}>
+    const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
+        <SlipStackPane key={p.id} width={paneWidth} style={extraStyle}>
             {typeof p.element === "function"
-                ? (p.element as ScrollableTiledPaneRenderer)({openPane})
+                ? (p.element as SlipStackPaneRenderer)({openPane})
                 : p.element}
-        </ScrollableTiledPane>
+        </SlipStackPane>
     );
 
     const slideStyle: CSSProperties = {
@@ -114,7 +114,7 @@ export function ScrollableTiledContainer({
     };
 
     const rightTabsElements = panes.slice(leftTabs + visibleCount).map(t => (
-        <VerticalTab key={t.id} title={t.title} width={tabWidth} side="right" />
+        <SlipStackTab key={t.id} title={t.title} width={tabWidth} side="right" />
     ));
 
     return (
@@ -130,7 +130,7 @@ export function ScrollableTiledContainer({
             }}
         >
             {tabs.map(t => (
-                <VerticalTab key={t.id} title={t.title} width={tabWidth} />
+                <SlipStackTab key={t.id} title={t.title} width={tabWidth} />
             ))}
             {first &&
                 renderPane(first, offset > 0

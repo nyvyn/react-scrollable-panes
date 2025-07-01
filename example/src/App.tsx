@@ -1,5 +1,5 @@
 import { useState, CSSProperties } from "react";
-import { ScrollableTiledContainer, ScrollableTiledPaneData } from 'slipstack';
+import { SlipStackContainer, SlipStackPaneData } from 'slipstack-react';
 
 const notes = [
   { id: "note-1",  title: "Shopping list",  body: "Milk, Eggs, Bread…" },
@@ -15,7 +15,7 @@ const notes = [
 ] as const;
 
 export default function App() {
-  const [open, setOpen] = useState<ScrollableTiledPaneData[]>([]);
+  const [open, setOpen] = useState<SlipStackPaneData[]>([]);
 
   const addNote = (n: typeof notes[number]) =>
     setOpen(p =>
@@ -74,7 +74,7 @@ export default function App() {
       </ul>
 
       {/* the panes that are currently open */}
-      <ScrollableTiledContainer initial={open} width={500} />
+      <SlipStackContainer initial={open} width={500} />
     </div>
   );
 }

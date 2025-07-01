@@ -10,21 +10,19 @@ import { CSSProperties, forwardRef, PropsWithChildren, ReactNode } from "react";
  *   • If the `id` already exists, every pane to its right is discarded
  *     and the matching pane becomes the right-most one.
  */
-export type ScrollableTiledPaneRenderer = (args: { openPane: (next: ScrollableTiledPaneData) => void }) => ReactNode;
+export type SlipStackPaneRenderer = (args: { openPane: (next: SlipStackPaneData) => void }) => ReactNode;
 
 /**
- *  Metadata required by `ScrollableTiledContainer` to describe a single
- *  pane in the horizontal stack.
+ *  Metadata required by `SlipStackContainer` to describe a single pane in the horizontal stack.
  *
  *  `element` can be either:
  *   • A plain ReactNode rendered as-is, or
- *   • A `ScrollableTiledPaneRenderer` that receives `openPane` so it can
- *     programmatically open further panes.
+ *   • A `SlipStackPaneRenderer` that receives `openPane` so it can programmatically open further panes.
  */
-export interface ScrollableTiledPaneData {
+export interface SlipStackPaneData {
     id: string;
     title: string;
-    element: ReactNode | ScrollableTiledPaneRenderer;
+    element: ReactNode | SlipStackPaneRenderer;
 }
 
 const basePaneStyle: CSSProperties = {
@@ -44,7 +42,7 @@ type Props = PropsWithChildren<{
     style?: CSSProperties;
 }>;
 
-export const ScrollableTiledPane = forwardRef<HTMLDivElement, Props>(
+export const SlipStackPane = forwardRef<HTMLDivElement, Props>(
     ({ width, style, children }, ref) => (
         <div
             ref={ref}
@@ -55,4 +53,4 @@ export const ScrollableTiledPane = forwardRef<HTMLDivElement, Props>(
         </div>
     ),
 );
-ScrollableTiledPane.displayName = "ScrollableTiledPane";
+SlipStackPane.displayName = "SlipStackPane";
