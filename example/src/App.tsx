@@ -21,7 +21,7 @@ export default function App() {
     setOpen(p =>
       p.find(x => x.id === n.id)
         ? p
-        : [...p, { id: n.id, title: n.title, element: <div>{n.body}</div> }],
+        : [...p, { id: n.id, title: n.title, element: <div style={noteStyle}>{n.body}</div> }],
     );
 
   const layout: CSSProperties = { display: "flex", height: "100vh" };
@@ -44,6 +44,7 @@ export default function App() {
     background: "transparent",
     cursor: "pointer",
   };
+  const noteStyle: CSSProperties = { padding: "16px" };   // NEW
 
   return (
     <div style={layout}>
