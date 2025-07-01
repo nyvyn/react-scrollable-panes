@@ -31,6 +31,15 @@ function App() {
 }
 ```
 
+## Example app
+Run the demo application from the `example` folder:
+
+```bash
+cd example
+pnpm install
+pnpm dev
+```
+
 ## API
 ### `ScrollableTiledContainer`
 
