@@ -23,22 +23,22 @@ const trackStyle: CSSProperties = {
 const tabWidth = 40;
 
 interface Props {
-    initial: SlipStackPaneData[];
-    width: number;
+    paneData: SlipStackPaneData[];
+    paneWidth: number;
 }
 
 SlipStackContainer.displayName = "SlipStackContainer";
 
 export function SlipStackContainer({
-    initial, width,
+    paneData, paneWidth,
 }: Props): ReactNode {
-    const [panes, setPanes] = useState<SlipStackPaneData[]>(initial);
+    const [panes, setPanes] = useState<SlipStackPaneData[]>(paneData);
     const [viewportRef, bounds] = useMeasure();
 
     // This provides updates when the pane array is updated.
     useEffect(() => {
-        setPanes(initial);
-    }, [initial]);
+        setPanes(paneData);
+    }, [paneData]);
 
     /**
      *  Passed to every pane renderer so it can request navigation.
@@ -52,13 +52,13 @@ export function SlipStackContainer({
     }), [],);
 
     // Width of a single pane, capped at the larger of container width or passed value
-    const paneWidth = Math.min(width, bounds.width);
+    const maxWidth = Math.min(paneWidth, bounds.width);
 
     // Number of tabs to show on the left side
     // Calculated as the total number of panes, subtracting one which can be overlapped
     // Multiplied by the width of a pane, which is then subtracted from the width of the viewport + the width of a tab - 1px to account for borders
     // Then divided by the width of a pane subtracting the width of a tab, which accounts for the width of all left tabs
-    const leftCount = Math.max(0, Math.ceil(((((panes.length - 1) * paneWidth) - bounds.width + tabWidth - 1)) / (paneWidth - tabWidth)));
+    const leftCount = Math.max(0, Math.ceil(((((panes.length - 1) * maxWidth) - bounds.width + tabWidth - 1)) / (maxWidth - tabWidth)));
     // Number of panes currently visible in viewport
     const mainCount = panes.length - leftCount;
     // Number of tabs to show on the right side
@@ -67,7 +67,7 @@ export function SlipStackContainer({
     // Available width for visible panes after accounting for tabs
     const available = bounds.width - (leftCount + rightCount) * tabWidth;
     // How much we need to offset visible panes to fit
-    const trackOffset = Math.max(0, (paneWidth * mainCount) - available);
+    const trackOffset = Math.max(0, (maxWidth * mainCount) - available);
 
     // Configure spring animation starting at zero position
     // styles contains the animated values and api provides methods to control the animation
@@ -78,7 +78,7 @@ export function SlipStackContainer({
         api.start({x, immediate: active});
     }, {
         axis: "x",
-        bounds: {left: -trackOffset, right: paneWidth - trackOffset},
+        bounds: {left: -trackOffset, right: maxWidth - trackOffset},
     });
 
     // Tabs to show on left side
@@ -89,7 +89,7 @@ export function SlipStackContainer({
     const rightTabs = panes.slice(leftCount + mainCount);
 
     const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
-        <SlipStackPane key={p.id} width={paneWidth} style={extraStyle}>
+        <SlipStackPane key={p.id} width={maxWidth} style={extraStyle}>
             {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane}) : p.element}
         </SlipStackPane>
     );
@@ -115,7 +115,7 @@ export function SlipStackContainer({
                 data-testid="track"
                 style={{
                     ...trackStyle,
-                    left: styles.x.to(x => (leftCount * tabWidth) + paneWidth - x),
+                    left: styles.x.to(x => (leftCount * tabWidth) + maxWidth - x),
                     transform: `translateX(-${trackOffset}px)`,
                     // add animation helpers only when we are actually sliding
                     ...(trackOffset > 0 && {
