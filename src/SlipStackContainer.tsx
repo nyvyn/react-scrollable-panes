@@ -73,57 +73,59 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
         // Width of a single pane, capped at the larger of container width or passed value
-        const maxWidth = Math.min(paneWidth, bounds.width);
+        const maxPaneWidth = Math.min(paneWidth, bounds.width);
 
-        // Base left is calculated to show the max number of panes plus one overlap
-        const baseLeft = Math.max(0, Math.ceil(
-            ((((panes.length - 1) * maxWidth) - bounds.width + tabWidth - 1)) / (maxWidth - tabWidth))
+        // Calculate the base number of panes that need to be tabs on the left.
+        const baseLeftTabs = Math.max(0, Math.ceil(
+            ((((panes.length - 1) * maxPaneWidth) - bounds.width + tabWidth - 1)) / (maxPaneWidth - tabWidth))
         );
 
-        // -n = n extra-left,  +n = n extra-right
-        const [extraTabs, setExtraTabs] = useState(-baseLeft);
+        // The "view offset" determines how many panes are shifted into tabs
+        // on the left or right. A negative offset results in left tabs,
+        // and a positive offset results in right tabs.
+        const [tabOffset, setTabOffset] = useState(-baseLeftTabs);
 
-        // When the layout changes, the number of items that overflow will
-        // change, so we need to reset the extras.
+        // When the layout or number of panes changes, reset the tab offset.
         useEffect(() => {
-            setExtraTabs(-baseLeft);
-        }, [baseLeft]);
+            setTabOffset(-baseLeftTabs);
+        }, [baseLeftTabs]);
 
-        // Normalize the extras, inverting the negative left extra to be positive.
-        const leftExtra = extraTabs < 0 ? extraTabs * -1 : 0;
-        const rightExtra = extraTabs > 0 ? extraTabs : 0;
+        // Derive the number of left and right tabs directly from the tab offset.
+        const leftCount = tabOffset < 0 ? -tabOffset : 0;
+        const rightCount = tabOffset > 0 ? tabOffset : 0;
 
-        const leftCount = Math.min(panes.length - 1, leftExtra);
-        const rightCount = Math.min(rightExtra, Math.max(0, panes.length - leftCount - 1));
-        const mainCount = Math.max(1, panes.length - leftCount - rightCount);
+        // Ensure the tab counts are within valid bounds.
+        const clampedLeftCount = Math.min(panes.length - 1, leftCount);
+        const clampedRightCount = Math.min(rightCount, Math.max(0, panes.length - clampedLeftCount - 1));
 
-        // Tabs to show on left side
-        const leftTabs = panes.slice(0, leftCount);
-        // Split visible panes into pinned and rest
-        const [pinnedPane, ...trackPanes] = panes.slice(leftCount, leftCount + mainCount);
-        // Tabs to show on right side
-        const rightTabs = panes.slice(leftCount + mainCount);
+        // The remaining panes are visible in the main area.
+        const mainCount = Math.max(1, panes.length - clampedLeftCount - clampedRightCount);
+
+        // Partition panes into their respective sections based on the calculated counts.
+        const leftTabs = panes.slice(0, clampedLeftCount);
+        const [pinnedPane, ...trackPanes] = panes.slice(clampedLeftCount, clampedLeftCount + mainCount);
+        const rightTabs = panes.slice(clampedLeftCount + mainCount);
 
         useEffect(() => {
             api.start({x: 0, immediate: true});
         }, [paneData, api]);
 
-        // Set the wheel hook and define component movement based on gesture data
         const minTravel = 0;
-        // The track can scroll from 0 to its full width minus the visible area.
-        const maxTravel = Math.max(0, (trackPanes.length * maxWidth) - (bounds.width - maxWidth) + (leftCount * tabWidth));
+        const maxTravel = maxPaneWidth - tabWidth;
+
+        // ... (useWheel gesture handler)
         const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
             // When scrolling to the right (revealing panes on the left), and we
             // are at the start, convert a left tab back into the pinned pane.
             if (x <= minTravel && dx < 0) {
-                setExtraTabs(t => t + 1);
+                setTabOffset(o => o + 1);
                 api.start({x: 0, immediate: active});
                 return;
             }
             // When scrolling to the left (revealing panes on the right), and we
             // are at the end, convert the pinned pane into a left tab.
             if (x >= maxTravel && dx > 0) {
-                setExtraTabs(t => t - 1);
+                setTabOffset(o => o - 1);
                 api.start({x: 0, immediate: active});
                 return;
             }
@@ -135,7 +137,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         });
 
         const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
-            <SlipStackPane key={p.id} width={maxWidth} style={extraStyle}>
+            <SlipStackPane key={p.id} width={maxPaneWidth} style={extraStyle}>
                 {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane}) : p.element}
             </SlipStackPane>
         );
@@ -158,7 +160,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     data-testid="track"
                     style={{
                         ...trackStyle,
-                        left: styles.x.to(x => (leftCount * tabWidth) + maxWidth - x),
+                        left: styles.x.to(x => (leftCount * tabWidth) + maxPaneWidth - x),
                         borderLeft: styles.x.to(x => (x !== 0 ? "1px solid rgba(0,0,0,0.05)" : "none")),
                         boxShadow: styles.x.to(x => (x !== 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none")),
                         willChange: styles.x.to(x => (x !== 0 ? "transform, box-shadow" : "auto")),
