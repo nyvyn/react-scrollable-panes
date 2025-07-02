@@ -1,6 +1,14 @@
 import { animated, useSpring } from "@react-spring/web";
 import { useWheel } from "@use-gesture/react";
-import { CSSProperties, ReactNode, useCallback, useEffect, useState, } from "react";
+import {
+  CSSProperties,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+  useImperativeHandle,
+  forwardRef
+} from "react";
 import useMeasure from "react-use-measure";
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "./SlipStackPane";
 import { SlipStackTab } from "./SlipStackTab";
@@ -27,11 +35,14 @@ interface Props {
     paneWidth: number;
 }
 
+export interface SlipStackHandle {
+  openPane(next: SlipStackPaneData): void;
+}
+
 SlipStackContainer.displayName = "SlipStackContainer";
 
-export function SlipStackContainer({
-    paneData, paneWidth,
-}: Props): ReactNode {
+export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
+  function SlipStackContainer({ paneData, paneWidth }: Props, ref): ReactNode {
     const [panes, setPanes] = useState<SlipStackPaneData[]>(paneData);
     const [viewportRef, bounds] = useMeasure();
 
@@ -50,6 +61,8 @@ export function SlipStackContainer({
         const i = prev.findIndex((p: { id: string; }) => p.id === next.id);
         return i === -1 ? [...prev, next] : [...prev.slice(0, i + 1)];
     }), [],);
+
+    useImperativeHandle(ref, () => ({ openPane }), [openPane]);
 
     // Width of a single pane, capped at the larger of container width or passed value
     const maxWidth = Math.min(paneWidth, bounds.width);
