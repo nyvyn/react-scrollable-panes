@@ -116,7 +116,8 @@ npm test
 
 ## Acknowledgements
 
-This project’s horizontally tiled-pane interaction model is inspired by Andy Matuschak’s notes system.
+This project’s horizontally tiled-pane interaction model is inspired by
+[Andy Matuschak’s working notes](https://notes.andymatuschak.org).
 
 ## License
 MIT
