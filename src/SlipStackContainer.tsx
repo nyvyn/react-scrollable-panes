@@ -1,3 +1,5 @@
+import { animated, useSpring } from "@react-spring/web";
+import { useWheel } from "@use-gesture/react";
 import { CSSProperties, ReactNode, useCallback, useEffect, useState, } from "react";
 import useMeasure from "react-use-measure";
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "./SlipStackPane";
@@ -65,7 +67,19 @@ export function SlipStackContainer({
     // Available width for visible panes after accounting for tabs
     const available = bounds.width - (leftCount + rightCount) * tabWidth;
     // How much we need to offset visible panes to fit
-    const offset = Math.max(0, paneWidth * mainCount - available);
+    const trackOffset = Math.max(0, (paneWidth * mainCount) - available);
+
+    // Configure spring animation starting at zero position
+    // styles contains the animated values and api provides methods to control the animation
+    const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
+
+    // Set the wheel hook and define component movement based on gesture data
+    const bind = useWheel(({active, offset: [x]}) => {
+        api.start({x, immediate: active});
+    }, {
+        axis: "x",
+        bounds: {left: -trackOffset, right: paneWidth - trackOffset},
+    });
 
     // Tabs to show on left side
     const leftTabs = panes.slice(0, leftCount);
@@ -73,19 +87,6 @@ export function SlipStackContainer({
     const [pinnedPane, ...trackPanes] = panes.slice(leftCount, leftCount + mainCount);
     // Tabs to show on right side
     const rightTabs = panes.slice(leftCount + mainCount);
-
-    const slideStyle: CSSProperties = {
-        // always reflect the *current* offset
-        transform: `translateX(-${offset}px)`,
-
-        // add animation helpers only when we are actually sliding
-        ...(offset > 0 && {
-            borderLeft: "1px solid rgba(0,0,0,0.05)",
-            boxShadow: "-6px 0 15px -3px rgba(0,0,0,0.05)",
-            transition: "transform 200ms cubic-bezier(0.19, 1, 0.22, 1)",
-            willChange: "transform, box-shadow",
-        }),
-    };
 
     const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
         <SlipStackPane key={p.id} width={paneWidth} style={extraStyle}>
@@ -99,6 +100,7 @@ export function SlipStackContainer({
 
     return (
         <div
+            {...bind()}
             ref={viewportRef}
             style={viewportStyle}
         >
@@ -106,19 +108,26 @@ export function SlipStackContainer({
 
             {pinnedPane && renderPane(
                 pinnedPane,
-                offset > 0 ? {position: "absolute", left: leftCount * tabWidth} : {marginLeft: leftCount * tabWidth}
+                trackOffset > 0 ? {position: "absolute", left: leftCount * tabWidth} : {marginLeft: leftCount * tabWidth}
             )}
 
-            <div
+            <animated.div
                 data-testid="track"
                 style={{
                     ...trackStyle,
-                    left: leftCount * tabWidth + paneWidth,
-                    ...slideStyle
+                    left: styles.x.to(x => (leftCount * tabWidth) + paneWidth - x),
+                    transform: `translateX(-${trackOffset}px)`,
+                    // add animation helpers only when we are actually sliding
+                    ...(trackOffset > 0 && {
+                        borderLeft: "1px solid rgba(0,0,0,0.05)",
+                        boxShadow: "-6px 0 15px -3px rgba(0,0,0,0.05)",
+                        transition: "transform 200ms cubic-bezier(0.19, 1, 0.22, 1)",
+                        willChange: "transform, box-shadow",
+                    })
                 }}
             >
                 {trackPanes.map(p => renderPane(p))}
-            </div>
+            </animated.div>
 
             <div style={{flexGrow: 1}}/>
 
