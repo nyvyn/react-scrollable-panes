@@ -80,22 +80,24 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
     // styles contains the animated values and api provides methods to control the animation
     const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
-    const [extraLeft, setExtraLeft] = useState(0);
-    const [extraRight, setExtraRight] = useState(0);
+    const [extraTabs, setExtraTabs] = useState(0);   // -n = n extra-left,  +n = n extra-right
 
     useEffect(() => {
-        setExtraLeft(0);
-        setExtraRight(0);
-        api.start({x: 0, immediate: true});
+        setExtraTabs(0);
+        api.start({ x: 0, immediate: true });
     }, [paneData, api]);
 
     // Width of a single pane, capped at the larger of container width or passed value
     const maxWidth = Math.min(paneWidth, bounds.width);
 
     const baseLeft = Math.max(0, Math.ceil(((((panes.length - 1) * maxWidth) - bounds.width + tabWidth - 1)) / (maxWidth - tabWidth)));
-    const leftCount = Math.min(panes.length - 1, baseLeft + extraLeft);
-    const rightCount = Math.min(extraRight, Math.max(0, panes.length - leftCount - 1));
-    const mainCount = Math.max(1, panes.length - leftCount - rightCount);
+
+    const leftExtra  = Math.max(0, -extraTabs);          // if counter is negative
+    const rightExtra = Math.max(0,  extraTabs);          // if counter is positive
+
+    const leftCount  = Math.min(panes.length - 1, baseLeft + leftExtra);
+    const rightCount = Math.min(rightExtra, Math.max(0, panes.length - leftCount - 1));
+    const mainCount  = Math.max(1, panes.length - leftCount - rightCount);
 
     // Available width for visible panes after accounting for tabs
     const available = bounds.width - (leftCount + rightCount) * tabWidth;
@@ -110,23 +112,21 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         if (
             x <= leftBound &&
             dx < 0 &&
-            rightCount < panes.length - leftCount - 1
+            rightCount < panes.length - leftCount - 1     // still at least one full pane
         ) {
-            setExtraLeft(v  => v + 1);
-            setExtraRight(v => v - 1);
+            setExtraTabs(t => t - 1);                     // one more tab on the left
             api.start({ x: 0, immediate: true });
             return;
         }
         // Branch for scrolling RIGHT (dx > 0) – create a right tab
         if (
-          x >= rightBound &&
-          dx > 0 &&
-          leftCount < panes.length - rightCount - 1
+            x >= rightBound &&
+            dx > 0 &&
+            leftCount < panes.length - rightCount - 1     // still at least one full pane
         ) {
-          setExtraRight(v => v + 1);
-          setExtraLeft(v  => v - 1);
-          api.start({ x: 0, immediate: true });
-          return;
+            setExtraTabs(t => t + 1);                     // one more tab on the right
+            api.start({ x: 0, immediate: true });
+            return;
         }
         api.start({x, immediate: active});
     }, {
