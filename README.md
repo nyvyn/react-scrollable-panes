@@ -28,8 +28,25 @@ const initial: SlipStackPaneData[] = [
 ];
 
 function App() {
-    return <SlipStackContainer initial={initial} width={500}/>;
+    return <SlipStackContainer paneData={initial} paneWidth={500} />;
 }
+```
+
+```tsx
+// Imperative navigation -----------------
+import { useRef } from "react";
+import { SlipStackContainer, SlipStackHandle } from "slipstack-react";
+
+const ref = useRef<SlipStackHandle>(null);
+
+<SlipStackContainer ref={ref} paneData={initial} paneWidth={500} />;
+
+// open another pane programmatically
+ref.current?.openPane({
+  id: "settings",
+  title: "Settings",
+  element: <div>Settings pane</div>,
+});
 ```
 
 ## Example app
@@ -46,8 +63,8 @@ npm dev
 
 | Prop        | Type                  | Default | Description                            |
 |-------------|-----------------------|---------|----------------------------------------|
-| `initial`   | `SlipStackPaneData[]` | –       | Panes shown when the component mounts. |
-| `width?`    | `number`              | `380`   | Maximum width of each pane.            |
+| `paneData`  | `SlipStackPaneData[]` | –       | Panes shown when the component mounts. |
+| `paneWidth` | `number`              | `380`   | Maximum width of each pane.            |
 
 ### `SlipStackPaneData`
 
@@ -67,6 +84,13 @@ type SlipStackPaneRenderer = (args: {
   openPane: (next: SlipStackPaneData) => void;
 }) => ReactNode;
 ```
+
+### SlipStackHandle
+Returned when you attach `ref` to the container.
+
+| Method     | Description                                       |
+|------------|---------------------------------------------------|
+| `openPane` | `openPane(next: SlipStackPaneData): void` &nbsp;—&nbsp;programmatically open or navigate to *next*. |
 
 Calling `openPane(next)` appends *next* to the right of the calling pane and removes any panes that were further right.
 
