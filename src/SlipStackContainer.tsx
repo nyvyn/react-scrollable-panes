@@ -89,7 +89,6 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             setExtraTabs(-baseLeft);
         }, [baseLeft]);
 
-
         // Normalize the extras, inverting the negative left extra to be positive.
         const leftExtra = extraTabs < 0 ? extraTabs * -1 : 0;
         const rightExtra = extraTabs > 0 ? extraTabs : 0;
@@ -98,23 +97,33 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const rightCount = Math.min(rightExtra, Math.max(0, panes.length - leftCount - 1));
         const mainCount = Math.max(1, panes.length - leftCount - rightCount);
 
+        // Tabs to show on left side
+        const leftTabs = panes.slice(0, leftCount);
+        // Split visible panes into pinned and rest
+        const [pinnedPane, ...trackPanes] = panes.slice(leftCount, leftCount + mainCount);
+        // Tabs to show on right side
+        const rightTabs = panes.slice(leftCount + mainCount);
+
         useEffect(() => {
             api.start({x: 0, immediate: true});
         }, [paneData, api]);
 
         // Set the wheel hook and define component movement based on gesture data
         const minTravel = 0;
-        const maxTravel = maxWidth - tabWidth;
+        // The track can scroll from 0 to its full width minus the visible area.
+        const maxTravel = Math.max(0, (trackPanes.length * maxWidth) - (bounds.width - maxWidth) + (leftCount * tabWidth));
         const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
-            // Branch for scrolling left (dx < 0) – create a left tab
+            // When scrolling to the right (revealing panes on the left), and we
+            // are at the start, convert a left tab back into the pinned pane.
             if (x <= minTravel && dx < 0) {
-                setExtraTabs(t => t - 1);
+                setExtraTabs(t => t + 1);
                 api.start({x: 0, immediate: active});
                 return;
             }
-            // Branch for scrolling right (dx > 0) – create a right tab
+            // When scrolling to the left (revealing panes on the right), and we
+            // are at the end, convert the pinned pane into a left tab.
             if (x >= maxTravel && dx > 0) {
-                setExtraTabs(t => t + 1);
+                setExtraTabs(t => t - 1);
                 api.start({x: 0, immediate: active});
                 return;
             }
@@ -124,13 +133,6 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             axis: "x",
             bounds: {left: minTravel, right: maxTravel},
         });
-
-        // Tabs to show on left side
-        const leftTabs = panes.slice(0, leftCount);
-        // Split visible panes into pinned and rest
-        const [pinnedPane, ...trackPanes] = panes.slice(leftCount, leftCount + mainCount);
-        // Tabs to show on right side
-        const rightTabs = panes.slice(leftCount + mainCount);
 
         const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
             <SlipStackPane key={p.id} width={maxWidth} style={extraStyle}>
