@@ -32,8 +32,9 @@ function App() {
 }
 ```
 
+Alternatively, you can use React imperative to navigate with the container.
+
 ```tsx
-// Imperative navigation -----------------
 import { useRef } from "react";
 import { SlipStackContainer, SlipStackHandle } from "slipstack-react";
 
