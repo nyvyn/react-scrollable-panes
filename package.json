@@ -9,7 +9,13 @@
     "url": "https://github.com/nyvyn/slipstack-react.git"
   },
   "homepage": "https://github.com/nyvyn/slipstack-react#readme",
-  "keywords": ["react", "sliding", "stacking", "panes", "slipstack"],
+  "keywords": [
+    "react",
+    "sliding",
+    "stacking",
+    "panes",
+    "slipstack"
+  ],
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -29,6 +35,8 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
+    "@react-spring/web": "^10.0.1",
+    "@use-gesture/react": "^10.3.1",
     "react-use-measure": "^2.1.1"
   },
   "devDependencies": {
