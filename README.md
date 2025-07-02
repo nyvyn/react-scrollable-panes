@@ -97,10 +97,14 @@ Calling `openPane(next)` appends *next* to the right of the calling pane and rem
 
 ## Behaviour
 
-• All panes share available width equally.  
-• If equal division would give any pane `< width`, panes keep `width` and the container becomes horizontally scrollable.  
-• `openPane` automatically scrolls the new pane into view, passing the new `SlipStackPaneData` to any 
-`SlipStackPaneRenderer`.
+• Every pane is rendered with a fixed width  
+  `maxWidth = min(paneWidth, viewportWidth)` – they are never shrunk below this value.  
+• If the total width of visible panes exceeds the viewport, the container
+  converts the left-most panes into 40 px vertical tabs and/or horizontally
+  scrolls the sliding track to keep everything accessible.  
+• `openPane(next)` appends (or navigates to) *next*, recomputes the layout,
+  and scrolls the new pane into view. The same `openPane` reference is passed
+  to every `SlipStackPaneRenderer`.
 
 ## Contributing
 PRs and issues are welcome. Run the dev setup with:
