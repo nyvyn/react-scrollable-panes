@@ -2,9 +2,9 @@ import "../../tests/helpers/mockUseMeasure"; // ← registers the react-use-meas
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ReactNode } from "react";
-import { SlipStackContainer } from "../SlipStackContainer";
+import { SlipStackContainer } from "@/SlipStackContainer";
 
-import type { SlipStackPaneData } from "../SlipStackPane";
+import type { SlipStackPaneData } from "@/SlipStackPane";
 
 type OpenPane = (next: SlipStackPaneData) => void;
 
@@ -27,7 +27,7 @@ it("appends a new pane and recalculates pane widths", async () => {
         makeOpenerPane("A", "B", <span>B-content</span>),
     ];
 
-    render(<SlipStackContainer initial={initial} width={width}/>);
+    render(<SlipStackContainer paneData={initial} paneWidth={width}/>);
 
     // → initially exactly one .pane with full width (= 800 px from mock)
     let panes = screen.getAllByTestId("pane");
