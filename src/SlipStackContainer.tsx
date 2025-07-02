@@ -9,8 +9,6 @@ const viewportStyle: CSSProperties = {
     flex: "1",
     width: "100%",
     overflow: "hidden",
-    scrollSnapType: "x mandatory",
-    scrollBehavior: "smooth",
 };
 
 const trackStyle: CSSProperties = {
@@ -83,10 +81,9 @@ export function SlipStackContainer({
         // add animation helpers only when we are actually sliding
         ...(offset > 0 && {
             borderLeft: "1px solid rgba(0,0,0,0.05)",
-            transition: "box-shadow 100ms linear, opacity 75ms linear, " + "transform 200ms cubic-bezier(0.19, 1, 0.22, 1)",
-            willChange: "transform, opacity, box-shadow",
-            opacity: 1, // shadow on the left side whenever the track has been shifted
             boxShadow: "-6px 0 15px -3px rgba(0,0,0,0.05)",
+            transition: "transform 200ms cubic-bezier(0.19, 1, 0.22, 1)",
+            willChange: "transform, box-shadow",
         }),
     };
 
@@ -114,7 +111,11 @@ export function SlipStackContainer({
 
             <div
                 data-testid="track"
-                style={{...trackStyle, left: leftCount * tabWidth + paneWidth, ...slideStyle}}
+                style={{
+                    ...trackStyle,
+                    left: leftCount * tabWidth + paneWidth,
+                    ...slideStyle
+                }}
             >
                 {trackPanes.map(p => renderPane(p))}
             </div>
