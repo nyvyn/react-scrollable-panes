@@ -1,41 +1,25 @@
-import "../../tests/helpers/mockUseMeasure"; // ← registers the react-use-measure mock
+import "../../tests/helpers/mockUseMeasure";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { ReactNode } from "react";
+import { act } from "react-dom/test-utils";
+import { createRef } from "react";
 import { SlipStackContainer } from "@/SlipStackContainer";
-
-import type { SlipStackPaneData } from "@/SlipStackPane";
-
-type OpenPane = (next: SlipStackPaneData) => void;
-
-const makeOpenerPane = (id: string, nextId: string, nextElement: ReactNode) => ({
-    id,
-    title: id,
-    element: ({openPane}: { openPane: OpenPane }) => (
-        <button onClick={() => openPane({id: nextId, title: nextId, element: nextElement})}>
-            {`open ${nextId}`}
-        </button>
-    ),
-});
+import type { SlipStackHandle } from "@/SlipStackContainer";
 
 it("appends a new pane and recalculates pane widths", async () => {
-    const user = userEvent.setup();
     const width = 400;
-
-    // 1️⃣  one opener pane that can add pane “B”
-    const initial = [
-        makeOpenerPane("A", "B", <span>B-content</span>),
-    ];
-
-    render(<SlipStackContainer paneData={initial} paneWidth={width}/>);
+    const ref = createRef<SlipStackHandle>();
+    const paneA = { id: "A", title: "A", element: <span>A-content</span> };
+    render(<SlipStackContainer ref={ref} paneData={[paneA]} paneWidth={width} />);
 
     // → initially exactly one .pane with full width (= 800 px from mock)
     let panes = screen.getAllByTestId("pane");
     expect(panes).toHaveLength(1);
     expect(panes[0]).toHaveStyle({width: "400px"});
 
-    // 2️⃣  click button inside first pane to open B
-    await user.click(screen.getByRole("button", {name: /open B/i}));
+    // 2️⃣  open B imperatively
+    act(() => {
+      ref.current!.openPane({ id: "B", title: "B", element: <span>B-content</span> });
+    });
 
     // → now two panes, both 400 px wide (800 px / 2)
     panes = screen.getAllByTestId("pane");
@@ -47,29 +31,16 @@ it("appends a new pane and recalculates pane widths", async () => {
 });
 
 it("slides panes over the first when width is limited", async () => {
-    const user = userEvent.setup();
     const minWidth = 300;
+    const ref = createRef<SlipStackHandle>();
+    const paneA = { id: "A", title: "A", element: <span>A</span> };
+    const paneB = { id: "B", title: "B", element: <span>B-content</span> };
+    const paneC = { id: "C", title: "C", element: <span>C-content</span> };
 
-    const paneC = {id: "C", title: "C", element: <span>C-content</span>};
-    const paneB = makeOpenerPane("B", "C", <span>C-content</span>);
-    paneB.element = ({openPane}: { openPane: OpenPane }) => (
-        <button onClick={() => openPane(paneC)}>open C</button>
-    );
+    render(<SlipStackContainer ref={ref} paneData={[paneA]} paneWidth={minWidth} />);
 
-    const initial = [
-        {
-            id: "A",
-            title: "A",
-            element: ({openPane}: { openPane: OpenPane }) => (
-                <button onClick={() => openPane(paneB)}>open B</button>
-            ),
-        },
-    ];
-
-    render(<SlipStackContainer initial={initial} width={minWidth}/>);
-
-    await user.click(screen.getByRole("button", {name: /open B/i}));
-    await user.click(screen.getByRole("button", {name: /open C/i}));
+    act(() => { ref.current!.openPane(paneB); });
+    act(() => { ref.current!.openPane(paneC); });
 
     const panes = screen.getAllByTestId("pane");
     expect(panes).toHaveLength(3);
@@ -78,34 +49,18 @@ it("slides panes over the first when width is limited", async () => {
 });
 
 it("creates vertical tabs when panes exceed available width", async () => {
-    const user = userEvent.setup();
     const width = 300;
+    const ref = createRef<SlipStackHandle>();
+    const paneA = { id: "A", title: "A", element: <span>A</span> };
+    const paneB = { id: "B", title: "B", element: <span>B</span> };
+    const paneC = { id: "C", title: "C", element: <span>C</span> };
+    const paneD = { id: "D", title: "D", element: <span>D-content</span> };
 
-    const paneD = {id: "D", title: "D", element: <span>D-content</span>};
-    const paneC = makeOpenerPane("C", "D", <span>D-content</span>);
-    paneC.element = ({openPane}: { openPane: OpenPane }) => (
-        <button onClick={() => openPane(paneD)}>open D</button>
-    );
-    const paneB = makeOpenerPane("B", "C", <span>C-content</span>);
-    paneB.element = ({openPane}: { openPane: OpenPane }) => (
-        <button onClick={() => openPane(paneC)}>open C</button>
-    );
+    render(<SlipStackContainer ref={ref} paneData={[paneA]} paneWidth={width} />);
 
-    const initial = [
-        {
-            id: "A",
-            title: "A",
-            element: ({openPane}: { openPane: OpenPane }) => (
-                <button onClick={() => openPane(paneB)}>open B</button>
-            ),
-        },
-    ];
-
-    render(<SlipStackContainer initial={initial} width={width}/>);
-
-    await user.click(screen.getByRole("button", {name: /open B/i}));
-    await user.click(screen.getByRole("button", {name: /open C/i}));
-    await user.click(screen.getByRole("button", {name: /open D/i}));
+    act(() => { ref.current!.openPane(paneB); });
+    act(() => { ref.current!.openPane(paneC); });
+    act(() => { ref.current!.openPane(paneD); });
 
     expect(screen.getAllByTestId("pane")).toHaveLength(3);
     expect(screen.getAllByTestId("tab")).toHaveLength(1);
