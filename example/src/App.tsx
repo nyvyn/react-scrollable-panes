@@ -1,6 +1,5 @@
 import { useRef, CSSProperties } from "react";
-import { SlipStackContainer } from "slipstack-react";
-import type { SlipStackHandle } from "slipstack-react";
+import { SlipStackContainer, SlipStackHandle } from "slipstack-react";
 
 const notes = [
   { id: "note-1",  title: "Shopping list",  body: "Milk, Eggs, Bread…" },
@@ -16,7 +15,7 @@ const notes = [
 ] as const;
 
 export default function App() {
-  const stackRef = useRef<SlipStackHandle>(null);
+  const stackRef = useRef<SlipStackHandle | null>(null);
 
   const addNote = (n: typeof notes[number]) =>
     stackRef.current?.openPane({

@@ -1,6 +1,6 @@
 import "../../tests/helpers/mockUseMeasure";
 import { render, screen } from "@testing-library/react";
-import { act } from "react-dom/test-utils";
+import { act } from "react";
 import { createRef } from "react";
 import { SlipStackContainer } from "@/SlipStackContainer";
 import type { SlipStackHandle } from "@/SlipStackContainer";

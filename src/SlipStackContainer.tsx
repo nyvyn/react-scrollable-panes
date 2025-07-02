@@ -1,3 +1,8 @@
+/**
+ * A container component that manages a stack of horizontally sliding panes.
+ * Handles pane navigation, responsive layout, and touch/mouse wheel interactions.
+ * Automatically creates tabs when panes exceed available width.
+ */
 import { animated, useSpring } from "@react-spring/web";
 import { useWheel } from "@use-gesture/react";
 import {
@@ -10,8 +15,8 @@ import {
   forwardRef
 } from "react";
 import useMeasure from "react-use-measure";
-import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "./SlipStackPane";
-import { SlipStackTab } from "./SlipStackTab";
+import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
+import { SlipStackTab } from "@/SlipStackTab";
 
 const viewportStyle: CSSProperties = {
     position: "relative",
@@ -30,16 +35,23 @@ const trackStyle: CSSProperties = {
 
 const tabWidth = 40;
 
+/**
+ * Props for the SlipStackContainer component
+ */
 interface Props {
+    /** Set of panes to layout in the container (a mix of tabs and panes based on widths) */
     paneData: SlipStackPaneData[];
+    /** Maximum width in pixels for each individual pane */
     paneWidth: number;
 }
 
+/**
+ * Imperative handle for controlling the SlipStackContainer from a parent component
+ */
 export interface SlipStackHandle {
-  openPane(next: SlipStackPaneData): void;
+    /** Opens a new pane or navigates to an existing one by its ID */
+    openPane(next: SlipStackPaneData): void;
 }
-
-SlipStackContainer.displayName = "SlipStackContainer";
 
 export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
   function SlipStackContainer({ paneData, paneWidth }: Props, ref): ReactNode {
@@ -147,4 +159,5 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             {rightTabs.map(p => renderTab(p, "right"))}
         </div>
     );
-}
+});
+SlipStackContainer.displayName = "SlipStackContainer";
