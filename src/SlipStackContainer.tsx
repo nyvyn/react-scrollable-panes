@@ -92,8 +92,8 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
     // Width of a single pane, capped at the larger of container width or passed value
     const maxWidth = Math.min(paneWidth, bounds.width);
 
-    const baseLeft = Math.max(0, Math.ceil(((((panes.length - extraRight - 1) * maxWidth) - bounds.width + tabWidth - 1)) / (maxWidth - tabWidth)));
-    const leftCount = Math.min(panes.length - extraRight - 1, baseLeft + extraLeft);
+    const baseLeft = Math.max(0, Math.ceil(((((panes.length - 1) * maxWidth) - bounds.width + tabWidth - 1)) / (maxWidth - tabWidth)));
+    const leftCount = Math.min(panes.length - 1, baseLeft + extraLeft);
     const rightCount = Math.min(extraRight, Math.max(0, panes.length - leftCount - 1));
     const mainCount = Math.max(1, panes.length - leftCount - rightCount);
 
@@ -106,6 +106,17 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
     const rightBound = maxWidth - trackOffset;
     const leftBound = -trackOffset;
     const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
+        // Branch for scrolling LEFT (dx < 0) – create a left tab
+        if (
+            x <= leftBound &&
+            dx < 0 &&
+            rightCount < panes.length - leftCount - 1
+        ) {
+            setExtraLeft(v  => v + 1);
+            setExtraRight(v => v - 1);
+            api.start({ x: 0, immediate: true });
+            return;
+        }
         // Branch for scrolling RIGHT (dx > 0) – create a right tab
         if (
           x >= rightBound &&
@@ -113,18 +124,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
           leftCount < panes.length - rightCount - 1
         ) {
           setExtraRight(v => v + 1);
-          setExtraLeft(v  => Math.max(0, v - 1));
-          api.start({ x: 0, immediate: true });
-          return;
-        }
-        // Branch for scrolling LEFT (dx < 0) – create a left tab
-        if (
-          x <= leftBound &&
-          dx < 0 &&
-          rightCount < panes.length - leftCount - 1
-        ) {
-          setExtraLeft(v  => v + 1);
-          setExtraRight(v => Math.max(0, v - 1));
+          setExtraLeft(v  => v - 1);
           api.start({ x: 0, immediate: true });
           return;
         }
