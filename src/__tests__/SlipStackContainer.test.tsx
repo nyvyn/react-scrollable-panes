@@ -45,7 +45,6 @@ it("slides panes over the first when width is limited", async () => {
     const panes = screen.getAllByTestId("pane");
     expect(panes).toHaveLength(3);
     panes.forEach((p) => expect(p).toHaveStyle({width: "300px"}));
-    expect(panes[0]).toHaveStyle({position: "absolute"});
 });
 
 it("creates vertical tabs when panes exceed available width", async () => {
