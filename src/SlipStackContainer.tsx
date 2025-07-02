@@ -106,17 +106,27 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
     const rightBound = maxWidth - trackOffset;
     const leftBound = -trackOffset;
     const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
-        if (x >= rightBound && dx > 0 && leftCount < panes.length - rightCount - 1) {
-            setExtraLeft(v => v + 1);
-            setExtraRight(v => Math.max(0, v - 1));
-            api.start({x: 0, immediate: true});
-            return;
+        // Branch for scrolling RIGHT (dx > 0) – create a right tab
+        if (
+          x >= rightBound &&
+          dx > 0 &&
+          leftCount < panes.length - rightCount - 1
+        ) {
+          setExtraRight(v => v + 1);
+          setExtraLeft(v  => Math.max(0, v - 1));
+          api.start({ x: 0, immediate: true });
+          return;
         }
-        if (x <= leftBound && dx < 0 && trackOffset > 0 && rightCount < panes.length - leftCount - 1) {
-            setExtraLeft(v => Math.max(0, v - 1));
-            setExtraRight(v => v + 1);
-            api.start({x: 0, immediate: true});
-            return;
+        // Branch for scrolling LEFT (dx < 0) – create a left tab
+        if (
+          x <= leftBound &&
+          dx < 0 &&
+          rightCount < panes.length - leftCount - 1
+        ) {
+          setExtraLeft(v  => v + 1);
+          setExtraRight(v => Math.max(0, v - 1));
+          api.start({ x: 0, immediate: true });
+          return;
         }
         api.start({x, immediate: active});
     }, {
