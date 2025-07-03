@@ -85,12 +85,21 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         // Width of a single pane, capped at the larger of container width or passed value
         const maxPaneWidth = Math.min(paneWidth, bounds.width);
 
-        // Calculate the base number of panes that need to be tabs on the left.
+        // Calculate how many panes must be converted to tabs to fit in the container.
+        // The logic divides the total overflow width (numerator) by the net space gained
+        // for each pane that is converted into a tab (denominator).
+        //
+        // The `tabWidth` is in the denominator because replacing a full pane (`maxPaneWidth`)
+        // with a tab still leaves the tab itself consuming `tabWidth` pixels, so the net
+        // space saved is `maxPaneWidth - tabWidth`.
+        //
+        // `tabWidth` is also used in the numerator's adjustment to ensure that even a
+        // fractional overflow correctly rounds up to create the required number of tabs.
         const initialTabCount = Math.max(0, Math.ceil(
-            ((((panes.length - 1) * maxPaneWidth) - bounds.width + tabWidth - 1)) / (maxPaneWidth - tabWidth))
+            ((((panes.length - 1) * maxPaneWidth) - bounds.width + tabWidth)) / (maxPaneWidth - tabWidth))
         );
 
-        // Number of right tabs, which take from the left tabs.
+        // right tab count
         const [rightTabCount, setRightTabCount] = useState(0);
 
         // Left tab count by deduction
