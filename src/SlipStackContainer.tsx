@@ -105,10 +105,10 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             api.start({x: 0, immediate: true});
         }, [paneData, api]);
 
-        const trackWidth = (trackPanes.length * maxPaneWidth);
-        const offset = bounds.width - trackWidth;
+        const offset = (bounds.width - (trackPanes.length * maxPaneWidth));
+        const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
         const minTravel = 0;
-        const maxTravel = maxPaneWidth - offset;
+        const maxTravel = maxPaneWidth + tabsWidth - offset;
 
         // ... (useWheel gesture handler)
         const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
