@@ -102,9 +102,11 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const rightTabs = panes.slice(panes.length - rightTabCount);
 
         // Calculated as the viewport - width of visible panes if stacked (which could exceed the viewport)
-        const offset = Math.min(0, viewportBounds.width - ((panes.length - initialTabCount) * maxPaneWidth));
         const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
-        const minTravel = offset;
+        const overlap = Math.min(
+            0,
+            viewportBounds.width - tabsWidth - ((panes.length - leftTabCount - rightTabCount) * maxPaneWidth)
+        );
         const maxTravel = 0;
 
         // Configure spring animation starting at zero position
@@ -112,8 +114,8 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
         useEffect(() => {
-            api.start({x: -offset, immediate: true});
-        }, [panes, api, offset]);
+            api.start({x: -overlap, immediate: true});
+        }, [panes, api, overlap]);
 
         // ... (useWheel gesture handler)
         const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
@@ -121,12 +123,12 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             if (dx < 0) {
                 // Begin pinning the left-most tab when at the start
                 if (leftTabs.length > 0 && x <= 0 && !pinningLeft) {
-                    setPinningLeft(true);
+                    //setPinningLeft(true);
                 }
                 // Once fully dragged over, convert the pinned tab to a right tab
                 if (pinningLeft && x <= -maxPaneWidth) {
-                    setPinningLeft(false);
-                    setTabOffset(t => t + 1);
+                    //setPinningLeft(false);
+                    //setTabOffset(t => t + 1);
                 }
             }
 
@@ -134,20 +136,20 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             if (dx > 0) {
                 // Cancel pinning if not completed
                 if (pinningLeft && x >= 0) {
-                    setPinningLeft(false);
+                    //setPinningLeft(false);
                 }
                 // Convert a right tab back to a left one when reaching the end
                 if (rightTabs.length > 0 && x >= maxTravel) {
-                    setPinningLeft(true);
-                    setTabOffset(t => t - 1);
+                    //setPinningLeft(true);
+                    //setTabOffset(t => t - 1);
                 }
             }
 
             // Otherwise, update position of track
-            api.start({x: -offset + x, immediate: active});
+            api.start({x: -overlap + x, immediate: active});
         }, {
             axis: "x",
-            bounds: {left: minTravel, right: maxTravel},
+            bounds: {left: overlap, right: 0},
         });
 
         const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
@@ -203,9 +205,8 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
                 <div style={{position: "absolute", bottom: 0}}>
                     {`
-                        Offset: ${offset}
-                        Min X: ${minTravel}
-                        Max X: ${maxTravel}
+                        Overlap: ${overlap}
+                        TabsWidth: ${tabsWidth}
                         Pinning: ${pinningLeft}
                         Left Tabs: ${leftTabCount}
                         Right Tabs: ${rightTabCount}
