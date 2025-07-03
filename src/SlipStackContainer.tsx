@@ -129,6 +129,8 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 if (tabRefuge && x <= -maxPaneWidth) {
                     setTabRefuge(false);
                     setTabOffset(t => t + 1);
+                    api.start({ x: -overlap + x + maxPaneWidth, immediate: true });
+                    return;
                 }
             }
 
@@ -142,6 +144,8 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 if (rightTabs.length > 0 && x >= maxTravel) {
                     setTabRefuge(true);
                     setTabOffset(t => t - 1);
+                    api.start({ x: -overlap + x - maxPaneWidth, immediate: true });
+                    return;
                 }
             }
 
