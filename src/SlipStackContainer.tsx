@@ -103,7 +103,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const [rightTabCount, setRightTabCount] = useState(0);
 
         // Left tab count by deduction
-        const leftTabCount = Math.max(0, initialTabCount - rightTabCount);
+        const leftTabCount = initialTabCount - rightTabCount;
 
         // Partition panes into their respective sections based on the calculated counts.
         const leftTabs = panes.slice(0, leftTabCount);
