@@ -111,8 +111,8 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
         useEffect(() => {
-            api.start({x: 0, immediate: true});
-        }, [panes, api]);
+            api.start({x: maxTravel, immediate: true});
+        }, [panes, api, maxTravel]);
 
         // ... (useWheel gesture handler)
         const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
