@@ -83,7 +83,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         );
 
         // Intermediate state: currently dragging a left tab into view
-        const [pinningLeft, setPinningLeft] = useState(false);
+        const [tabRefuge, setTabRefuge] = useState(false);
         const [tabOffset, setTabOffset] = useState(0);
 
         // Track how many tabs are collapsed on each side.
@@ -91,11 +91,11 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const rightTabCount = tabOffset;
 
         // Partition panes into their respective sections based on the current state.
-        const leftTabs = pinningLeft
+        const leftTabs = tabRefuge
             ? panes.slice(1, leftTabCount)
             : panes.slice(0, leftTabCount);
 
-        const [pinnedPane, ...trackPanes] = pinningLeft
+        const [pinnedPane, ...trackPanes] = tabRefuge
             ? panes.slice(0, panes.length - rightTabCount)
             : panes.slice(leftTabCount, panes.length - rightTabCount);
 
@@ -122,26 +122,26 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             // When scrolling to the right (revealing panes on the left)
             if (dx < 0) {
                 // Begin pinning the left-most tab when at the start
-                if (leftTabs.length > 0 && x <= 0 && !pinningLeft) {
-                    //setPinningLeft(true);
+                if (leftTabs.length > 0 && x <= 0 && !tabRefuge) {
+                    setTabRefuge(true);
                 }
                 // Once fully dragged over, convert the pinned tab to a right tab
-                if (pinningLeft && x <= -maxPaneWidth) {
-                    //setPinningLeft(false);
-                    //setTabOffset(t => t + 1);
+                if (tabRefuge && x <= -maxPaneWidth) {
+                    setTabRefuge(false);
+                    setTabOffset(t => t + 1);
                 }
             }
 
             // When scrolling to the left (revealing panes on the right)
             if (dx > 0) {
                 // Cancel pinning if not completed
-                if (pinningLeft && x >= 0) {
-                    //setPinningLeft(false);
+                if (tabRefuge && x >= 0) {
+                    setTabRefuge(false);
                 }
                 // Convert a right tab back to a left one when reaching the end
                 if (rightTabs.length > 0 && x >= maxTravel) {
-                    //setPinningLeft(true);
-                    //setTabOffset(t => t - 1);
+                    setTabRefuge(true);
+                    setTabOffset(t => t - 1);
                 }
             }
 
@@ -207,7 +207,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     {`
                         Overlap: ${overlap}
                         TabsWidth: ${tabsWidth}
-                        Pinning: ${pinningLeft}
+                        Pinning: ${tabRefuge}
                         Left Tabs: ${leftTabCount}
                         Right Tabs: ${rightTabCount}
                     `}
