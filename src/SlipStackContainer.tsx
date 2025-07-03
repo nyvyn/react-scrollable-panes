@@ -1,7 +1,24 @@
-import { CSSProperties, ReactNode, useCallback, useEffect, useState, } from "react";
+/**
+ *  A container component that manages a stack of horizontally sliding panes.
+ *  Handles pane navigation, responsive layout, and touch/mouse wheel interactions.
+ *
+ *  Slip stack behavior
+ *
+ *  Fixed-width panes line up horizontally.
+ *  New panes are inserted to the far right of the list of horizontal panes.
+ *  If the width of this track of panes exceeds the viewport,
+ *  then the left-most pane is converted to a vertical tab.
+ *  Additionally, the first pane in the horizontal track of panes is fixed to the left margin.
+ *  The remaining set of visible panes can slide over the first pinned pane.
+ *  Scrolling the track to the right can convert the leftmost pane into the now new pinned pane,
+ *  with the rightmost pane in the track converted to a right-aligned vertical tab.
+ */
+import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
+import { SlipStackTab } from "@/SlipStackTab";
+import { animated, useSpring } from "@react-spring/web";
+import { useWheel } from "@use-gesture/react";
+import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import useMeasure from "react-use-measure";
-import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "./SlipStackPane";
-import { SlipStackTab } from "./SlipStackTab";
 
 const viewportStyle: CSSProperties = {
     position: "relative",
@@ -9,8 +26,6 @@ const viewportStyle: CSSProperties = {
     flex: "1",
     width: "100%",
     overflow: "hidden",
-    scrollSnapType: "x mandatory",
-    scrollBehavior: "smooth",
 };
 
 const trackStyle: CSSProperties = {
@@ -22,106 +37,148 @@ const trackStyle: CSSProperties = {
 
 const tabWidth = 40;
 
+/**
+ * Props for the SlipStackContainer component
+ */
 interface Props {
-    initial: SlipStackPaneData[];
-    width: number;
+    /** Set of panes to layout in the container (a mix of tabs and panes based on widths) */
+    paneData: SlipStackPaneData[];
+    /** Maximum width in pixels for each individual pane */
+    paneWidth: number;
 }
 
-SlipStackContainer.displayName = "SlipStackContainer";
+/**
+ * Imperative handle for controlling the SlipStackContainer from a parent component
+ */
+export interface SlipStackHandle {
+    /** Opens a new pane or navigates to an existing one by its ID */
+    openPane(next: SlipStackPaneData): void;
+}
 
-export function SlipStackContainer({
-    initial, width,
-}: Props): ReactNode {
-    const [panes, setPanes] = useState<SlipStackPaneData[]>(initial);
-    const [viewportRef, bounds] = useMeasure();
+export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
+    function SlipStackContainer({paneData, paneWidth}: Props, ref): ReactNode {
+        const [panes, setPanes] = useState<SlipStackPaneData[]>(paneData);
+        const [viewportRef, bounds] = useMeasure();
 
-    // This provides updates when the pane array is updated.
-    useEffect(() => {
-        setPanes(initial);
-    }, [initial]);
+        // This provides updates when the pane array is updated.
+        useEffect(() => {
+            setPanes(paneData);
+        }, [paneData]);
 
-    /**
-     *  Passed to every pane renderer so it can request navigation.
-     *   – Appends the pane when its `id` is new.
-     *   – Otherwise keeps panes up to (and including) the matching `id`,
-     *     effectively replacing everything to its right.
-     */
-    const openPane = useCallback((next: SlipStackPaneData) => setPanes((prev) => {
-        const i = prev.findIndex((p: { id: string; }) => p.id === next.id);
-        return i === -1 ? [...prev, next] : [...prev.slice(0, i + 1)];
-    }), [],);
+        /**
+         *  Passed to every pane renderer so it can request navigation.
+         *   - Appends the pane when its `id` is new.
+         *   - Moves existing pane to the end when its `id` is found.
+         */
+        const openPane = useCallback((next: SlipStackPaneData) => setPanes((prev) => {
+            const i = prev.findIndex((p: { id: string; }) => p.id === next.id);
+            return i === -1 ? [...prev, next] : [...prev.filter(p => p.id !== next.id), next];
+        }), [],);
 
-    // Width of a single pane, capped at the larger of container width or passed value
-    const paneWidth = Math.min(width, bounds.width);
+        // Expose the openPane handler to external callers
+        useImperativeHandle(ref, () => ({openPane}), [openPane]);
 
-    // Number of tabs to show on the left side
-    // Calculated as the total number of panes, subtracting one which can be overlapped
-    // Multiplied by the width of a pane, which is then subtracted from the width of the viewport + the width of a tab - 1px to account for borders
-    // Then divided by the width of a pane subtracting the width of a tab, which accounts for the width of all left tabs
-    const leftCount = Math.max(0, Math.ceil(((((panes.length - 1) * paneWidth) - bounds.width + tabWidth - 1)) / (paneWidth - tabWidth)));
-    // Number of panes currently visible in viewport
-    const mainCount = panes.length - leftCount;
-    // Number of tabs to show on the right side
-    const rightCount = Math.max(0, panes.length - leftCount - mainCount);
+        // Configure spring animation starting at zero position
+        // styles contains the animated values and api provides methods to control the animation
+        const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
-    // Available width for visible panes after accounting for tabs
-    const available = bounds.width - (leftCount + rightCount) * tabWidth;
-    // How much we need to offset visible panes to fit
-    const offset = Math.max(0, paneWidth * mainCount - available);
+        // Width of a single pane, capped at the larger of container width or passed value
+        const maxPaneWidth = Math.min(paneWidth, bounds.width);
 
-    // Tabs to show on left side
-    const leftTabs = panes.slice(0, leftCount);
-    // Split visible panes into pinned and rest
-    const [pinnedPane, ...trackPanes] = panes.slice(leftCount, leftCount + mainCount);
-    // Tabs to show on right side
-    const rightTabs = panes.slice(leftCount + mainCount);
+        // Calculate how many panes must be converted to tabs to fit in the container.
+        // The logic divides the total overflow width (numerator) by the net space gained
+        // for each pane that is converted into a tab (denominator).
+        //
+        // The `tabWidth` is in the denominator because replacing a full pane (`maxPaneWidth`)
+        // with a tab still leaves the tab itself consuming `tabWidth` pixels, so the net
+        // space saved is `maxPaneWidth - tabWidth`.
+        //
+        // `tabWidth` is also used in the numerator's adjustment to ensure that even a
+        // fractional overflow correctly rounds up to create the required number of tabs.
+        const initialTabCount = Math.max(0, Math.ceil(
+            ((((panes.length - 1) * maxPaneWidth) - bounds.width + tabWidth)) / (maxPaneWidth - tabWidth))
+        );
 
-    const slideStyle: CSSProperties = {
-        // always reflect the *current* offset
-        transform: `translateX(-${offset}px)`,
+        // right tab count
+        const [rightTabCount, setRightTabCount] = useState(0);
 
-        // add animation helpers only when we are actually sliding
-        ...(offset > 0 && {
-            borderLeft: "1px solid rgba(0,0,0,0.05)",
-            transition: "box-shadow 100ms linear, opacity 75ms linear, " + "transform 200ms cubic-bezier(0.19, 1, 0.22, 1)",
-            willChange: "transform, opacity, box-shadow",
-            opacity: 1, // shadow on the left side whenever the track has been shifted
-            boxShadow: "-6px 0 15px -3px rgba(0,0,0,0.05)",
-        }),
-    };
+        // Left tab count by deduction
+        const leftTabCount = initialTabCount - rightTabCount;
 
-    const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
-        <SlipStackPane key={p.id} width={paneWidth} style={extraStyle}>
-            {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane}) : p.element}
-        </SlipStackPane>
-    );
+        // Partition panes into their respective sections based on the calculated counts.
+        const leftTabs = panes.slice(0, leftTabCount);
+        const [pinnedPane, ...trackPanes] = panes.slice(leftTabCount, panes.length - rightTabCount);
+        const rightTabs = panes.slice(panes.length - rightTabCount);
 
-    const renderTab = (p: SlipStackPaneData, side: "left" | "right") => (
-        <SlipStackTab key={p.id} title={p.title} width={tabWidth} side={side}/>
-    );
+        useEffect(() => {
+            api.start({x: 0, immediate: true});
+        }, [paneData, api]);
 
-    return (
-        <div
-            ref={viewportRef}
-            style={viewportStyle}
-        >
-            {leftTabs.map(p => renderTab(p, "left"))}
+        const offset = (bounds.width - (trackPanes.length * maxPaneWidth));
+        const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
+        const minTravel = 0;
+        const maxTravel = maxPaneWidth + tabsWidth - offset;
 
-            {pinnedPane && renderPane(
-                pinnedPane,
-                offset > 0 ? {position: "absolute", left: leftCount * tabWidth} : {marginLeft: leftCount * tabWidth}
-            )}
+        // ... (useWheel gesture handler)
+        const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
+            // When scrolling to the right (revealing panes on the left),
+            // and we are at the start, convert a left tab to a right one.
+            if (leftTabs.length > 0 && x <= minTravel && dx < 0) {
+                setRightTabCount(c => c + 1);
+                api.start({x: 0, immediate: active});
+                return;
+            }
+            // When scrolling to the left (revealing panes on the right),
+            // and we are at the end, convert a right tab to a left one.
+            if (rightTabs.length > 0 && x >= maxTravel && dx > 0) {
+                setRightTabCount(c => c - 1);
+                api.start({x: 0, immediate: active});
+                return;
+            }
+            // Otherwise, update position of track
+            api.start({x, immediate: active});
+        }, {
+            axis: "x",
+            bounds: {left: minTravel, right: maxTravel},
+        });
 
+        const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
+            <SlipStackPane key={p.id} width={maxPaneWidth} style={extraStyle}>
+                {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane}) : p.element}
+            </SlipStackPane>
+        );
+
+        const renderTab = (p: SlipStackPaneData, side: "left" | "right") => (
+            <SlipStackTab key={p.id} title={p.title} width={tabWidth} side={side}/>
+        );
+
+        return (
             <div
-                data-testid="track"
-                style={{...trackStyle, left: leftCount * tabWidth + paneWidth, ...slideStyle}}
+                {...bind()}
+                ref={viewportRef}
+                style={viewportStyle}
             >
-                {trackPanes.map(p => renderPane(p))}
+                {leftTabs.map(tab => renderTab(tab, "left"))}
+
+                {pinnedPane && renderPane(pinnedPane)}
+
+                <animated.div
+                    data-testid="track"
+                    style={{
+                        ...trackStyle,
+                        left: styles.x.to(x => (leftTabs.length * tabWidth) + maxPaneWidth - x),
+                        borderLeft: styles.x.to(x => (x !== 0 ? "1px solid rgba(0,0,0,0.05)" : "none")),
+                        boxShadow: styles.x.to(x => (x !== 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none")),
+                        willChange: styles.x.to(x => (x !== 0 ? "transform, box-shadow" : "auto")),
+                    }}
+                >
+                    {trackPanes.map(p => renderPane(p))}
+                </animated.div>
+
+                <div style={{flexGrow: 1}}/>
+
+                {rightTabs.map(tab => renderTab(tab, "right"))}
             </div>
-
-            <div style={{flexGrow: 1}}/>
-
-            {rightTabs.map(p => renderTab(p, "right"))}
-        </div>
-    );
-}
+        );
+    });
+SlipStackContainer.displayName = "SlipStackContainer";

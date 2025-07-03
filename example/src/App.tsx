@@ -1,5 +1,5 @@
-import { useState, CSSProperties } from "react";
-import { SlipStackContainer, SlipStackPaneData } from 'slipstack-react';
+import { useRef, CSSProperties } from "react";
+import { SlipStackContainer, SlipStackHandle } from "slipstack-react";
 
 const notes = [
   { id: "note-1",  title: "Shopping list",  body: "Milk, Eggs, Bread…" },
@@ -15,13 +15,14 @@ const notes = [
 ] as const;
 
 export default function App() {
-  const [open, setOpen] = useState<SlipStackPaneData[]>([]);
+  const stackRef = useRef<SlipStackHandle | null>(null);
 
   const addNote = (n: typeof notes[number]) =>
-      setOpen(p => [
-        ...p.filter(x => x.id !== n.id),
-        p.find(x => x.id === n.id) ?? { id: n.id, title: n.title, element: <NotePane title={n.title} body={n.body} /> },
-      ]);
+    stackRef.current?.openPane({
+      id: n.id,
+      title: n.title,
+      element: <NotePane title={n.title} body={n.body} />,
+    });
 
   const layout: CSSProperties = {
     display: "flex",
@@ -73,7 +74,7 @@ export default function App() {
       </ul>
 
       {/* the panes that are currently open */}
-      <SlipStackContainer initial={open} width={500} />
+      <SlipStackContainer ref={stackRef} paneData={[]} paneWidth={500} />
     </div>
   );
 }

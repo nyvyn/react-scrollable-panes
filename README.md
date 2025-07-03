@@ -28,8 +28,26 @@ const initial: SlipStackPaneData[] = [
 ];
 
 function App() {
-    return <SlipStackContainer initial={initial} width={500}/>;
+    return <SlipStackContainer paneData={initial} paneWidth={500} />;
 }
+```
+
+Alternatively, you can use React imperative to navigate with the container.
+
+```tsx
+import { useRef } from "react";
+import { SlipStackContainer, SlipStackHandle } from "slipstack-react";
+
+const ref = useRef<SlipStackHandle>(null);
+
+<SlipStackContainer ref={ref} paneData={initial} paneWidth={500} />;
+
+// open another pane programmatically
+ref.current?.openPane({
+  id: "settings",
+  title: "Settings",
+  element: <div>Settings pane</div>,
+});
 ```
 
 ## Example app
@@ -46,8 +64,8 @@ npm dev
 
 | Prop        | Type                  | Default | Description                            |
 |-------------|-----------------------|---------|----------------------------------------|
-| `initial`   | `SlipStackPaneData[]` | –       | Panes shown when the component mounts. |
-| `width?`    | `number`              | `380`   | Maximum width of each pane.            |
+| `paneData`  | `SlipStackPaneData[]` | –       | Panes shown when the component mounts. |
+| `paneWidth` | `number`              | `380`   | Maximum width of each pane.            |
 
 ### `SlipStackPaneData`
 
@@ -68,14 +86,25 @@ type SlipStackPaneRenderer = (args: {
 }) => ReactNode;
 ```
 
+### SlipStackHandle
+Returned when you attach `ref` to the container.
+
+| Method     | Description                                       |
+|------------|---------------------------------------------------|
+| `openPane` | `openPane(next: SlipStackPaneData): void` &nbsp;—&nbsp;programmatically open or navigate to *next*. |
+
 Calling `openPane(next)` appends *next* to the right of the calling pane and removes any panes that were further right.
 
 ## Behaviour
 
-• All panes share available width equally.  
-• If equal division would give any pane `< width`, panes keep `width` and the container becomes horizontally scrollable.  
-• `openPane` automatically scrolls the new pane into view, passing the new `SlipStackPaneData` to any 
-`SlipStackPaneRenderer`.
+• Every pane is rendered with a fixed width  
+  `maxWidth = min(paneWidth, viewportWidth)` – they are never shrunk below this value.  
+• If the total width of visible panes exceeds the viewport, the container
+  converts the left-most panes into 40 px vertical tabs and/or horizontally
+  scrolls the sliding track to keep everything accessible.  
+• `openPane(next)` appends (or navigates to) *next*, recomputes the layout,
+  and scrolls the new pane into view. The same `openPane` reference is passed
+  to every `SlipStackPaneRenderer`.
 
 ## Contributing
 PRs and issues are welcome. Run the dev setup with:
@@ -87,7 +116,8 @@ npm test
 
 ## Acknowledgements
 
-This project’s horizontally tiled-pane interaction model is inspired by Andy Matuschak’s notes system.
+This project’s horizontally tiled-pane interaction model is inspired by
+[Andy Matuschak’s working notes](https://notes.andymatuschak.org).
 
 ## License
 MIT

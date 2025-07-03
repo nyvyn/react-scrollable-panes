@@ -12,7 +12,8 @@
     "skipLibCheck": true,
     "declaration": true,
     "outDir": "dist",
-    "types": ["vitest/globals", "vite/client", "@testing-library/jest-dom"]
+    "types": ["vitest/globals", "vite/client", "@testing-library/jest-dom"],
+    "paths": {"@/*": ["./src/*" ]}
   },
   "include": ["src"]
 }
