@@ -20,21 +20,6 @@ import { useWheel } from "@use-gesture/react";
 import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import useMeasure from "react-use-measure";
 
-const viewportStyle: CSSProperties = {
-    position: "relative",
-    display: "flex",
-    flex: "1",
-    width: "100%",
-    overflow: "hidden",
-};
-
-const trackStyle: CSSProperties = {
-    position: "absolute",
-    display: "flex",
-    flexDirection: "row",
-    height: "100%",
-};
-
 const tabWidth = 40;
 
 /**
@@ -58,7 +43,7 @@ export interface SlipStackHandle {
 export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
     function SlipStackContainer({paneData, paneWidth}: Props, ref): ReactNode {
         const [panes, setPanes] = useState<SlipStackPaneData[]>(paneData);
-        const [viewportRef, bounds] = useMeasure();
+        const [viewportRef, viewportBounds] = useMeasure();
 
         // This provides updates when the pane array is updated.
         useEffect(() => {
@@ -83,7 +68,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
         // Width of a single pane, capped at the larger of container width or passed value
-        const maxPaneWidth = Math.min(paneWidth, bounds.width);
+        const maxPaneWidth = Math.min(paneWidth, viewportBounds.width);
 
         // Calculate how many panes must be converted to tabs to fit in the container.
         // The logic divides the total overflow width (numerator) by the net space gained
@@ -96,50 +81,54 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         // `tabWidth` is also used in the numerator's adjustment to ensure that even a
         // fractional overflow correctly rounds up to create the required number of tabs.
         const initialTabCount = Math.max(0, Math.ceil(
-            ((((panes.length - 1) * maxPaneWidth) - bounds.width + tabWidth)) / (maxPaneWidth - tabWidth))
+            ((((panes.length - 1) * maxPaneWidth) - viewportBounds.width + tabWidth)) / (maxPaneWidth - tabWidth))
         );
 
-        // right tab count
-        const [rightTabCount, setRightTabCount] = useState(0);
+        // Right tab offset from initial left tabs
+        const [tabDelta, setTabDelta] = useState(0);
 
-        // Left tab count by deduction
-        const leftTabCount = initialTabCount - rightTabCount;
+        const leftTabCount = initialTabCount - tabDelta;
+        const rightTabCount = 0;
 
-        // Partition panes into their respective sections based on the calculated counts.
-        const leftTabs = panes.slice(0, leftTabCount);
-        const [pinnedPane, ...trackPanes] = panes.slice(leftTabCount, panes.length - rightTabCount);
-        const rightTabs = panes.slice(panes.length - rightTabCount);
+        const [leftTabs, setLeftTabs] = useState<SlipStackPaneData[]>([]);
+        const [pinnedPane, setPinnedPane] = useState<SlipStackPaneData | null>(null);
+        const [trackPanes, setTrackPanes] = useState<SlipStackPaneData[]>([]);
+        const [rightTabs, setRightTabs] = useState<SlipStackPaneData[]>([]);
+
+        useEffect(() => {
+            setLeftTabs(panes.slice(0, leftTabCount));
+            setPinnedPane(panes[leftTabCount]);
+            setTrackPanes(panes.slice(leftTabCount + 1, panes.length - rightTabCount));
+            setRightTabs(panes.slice(panes.length - rightTabCount));
+        }, [leftTabCount, rightTabCount, panes]);
 
         useEffect(() => {
             api.start({x: 0, immediate: true});
-        }, [paneData, api]);
+        }, [panes, api]);
 
-        const offset = (bounds.width - (trackPanes.length * maxPaneWidth));
+        // Calculated as the viewport - width of visible panes if stacked (which could exceed the viewport)
+        const offset = viewportBounds.width - ((panes.length - initialTabCount) * maxPaneWidth);
         const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
-        const minTravel = 0;
-        const maxTravel = maxPaneWidth + tabsWidth - offset;
+        const minThreshold = 0;
+        const maxThreshold = -offset + tabsWidth;
 
         // ... (useWheel gesture handler)
         const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
             // When scrolling to the right (revealing panes on the left),
             // and we are at the start, convert a left tab to a right one.
-            if (leftTabs.length > 0 && x <= minTravel && dx < 0) {
-                setRightTabCount(c => c + 1);
-                api.start({x: 0, immediate: active});
-                return;
+            if (leftTabCount > 0 && x <= minThreshold && dx < 0) {
+                setTabDelta(c => c + 1);
             }
             // When scrolling to the left (revealing panes on the right),
             // and we are at the end, convert a right tab to a left one.
-            if (rightTabs.length > 0 && x >= maxTravel && dx > 0) {
-                setRightTabCount(c => c - 1);
-                api.start({x: 0, immediate: active});
-                return;
+            if (leftTabCount < initialTabCount && x >= maxThreshold && dx > 0) {
+                setTabDelta(c => c - 1);
             }
             // Otherwise, update position of track
             api.start({x, immediate: active});
         }, {
             axis: "x",
-            bounds: {left: minTravel, right: maxTravel},
+            bounds: {left: minThreshold, right: maxThreshold},
         });
 
         const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
@@ -156,17 +145,31 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             <div
                 {...bind()}
                 ref={viewportRef}
-                style={viewportStyle}
+                style={{
+                    position: "relative",
+                    display: "flex",
+                    flex: "1",
+                    width: "100%",
+                    height: "100%",
+                    overflow: "hidden",
+                }}
             >
                 {leftTabs.map(tab => renderTab(tab, "left"))}
 
-                {pinnedPane && renderPane(pinnedPane)}
+                {pinnedPane && renderPane(pinnedPane, {
+                    position: "absolute",
+                    left: leftTabs.length * tabWidth
+                })}
 
                 <animated.div
                     data-testid="track"
                     style={{
-                        ...trackStyle,
-                        left: styles.x.to(x => (leftTabs.length * tabWidth) + maxPaneWidth - x),
+                        position: "absolute",
+                        display: "flex",
+                        flexDirection: "row",
+                        height: "100%",
+                        left: (leftTabs.length * tabWidth) + maxPaneWidth,
+                        marginLeft: styles.x.to(x => -x),
                         borderLeft: styles.x.to(x => (x !== 0 ? "1px solid rgba(0,0,0,0.05)" : "none")),
                         boxShadow: styles.x.to(x => (x !== 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none")),
                         willChange: styles.x.to(x => (x !== 0 ? "transform, box-shadow" : "auto")),
@@ -178,6 +181,14 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 <div style={{flexGrow: 1}}/>
 
                 {rightTabs.map(tab => renderTab(tab, "right"))}
+
+                <div style={{position: "absolute", bottom: 0}}>
+                    {`
+                        Debug: Tab Delta: ${tabDelta} 
+                        Min X: ${minThreshold}
+                        Max X: ${maxThreshold}
+                    `}
+                </div>
             </div>
         );
     });
