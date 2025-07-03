@@ -76,27 +76,16 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const maxPaneWidth = Math.min(paneWidth, bounds.width);
 
         // Calculate the base number of panes that need to be tabs on the left.
-        const baseLeftTabs = Math.max(0, Math.ceil(
+        const initialTabCount = Math.max(0, Math.ceil(
             ((((panes.length - 1) * maxPaneWidth) - bounds.width + tabWidth - 1)) / (maxPaneWidth - tabWidth))
         );
 
-        // The "view offset" determines how many panes are shifted into tabs
-        // on the left or right. A negative offset results in left tabs,
-        // and a positive offset results in right tabs.
-        const [tabOffset, setTabOffset] = useState(-baseLeftTabs);
-
-        // When the layout or number of panes changes, reset the tab offset.
-        useEffect(() => {
-            setTabOffset(-baseLeftTabs);
-        }, [baseLeftTabs]);
-
-        // Derive the number of left and right tabs directly from the tab offset.
-        const leftCount = tabOffset < 0 ? -tabOffset : 0;
-        const rightCount = tabOffset > 0 ? tabOffset : 0;
+        // Number of right tabs, which "steal" from the left tabs.
+        const [rightTabCount, setRightTabCount] = useState(0);
 
         // Ensure the tab counts are within valid bounds.
-        const clampedLeftCount = Math.min(panes.length - 1, leftCount);
-        const clampedRightCount = Math.min(rightCount, Math.max(0, panes.length - clampedLeftCount - 1));
+        const clampedLeftCount = Math.min(initialTabCount, panes.length - 1);
+        const clampedRightCount = Math.min(rightTabCount, Math.max(0, panes.length - clampedLeftCount - 1));
 
         // The remaining panes are visible in the main area.
         const mainCount = Math.max(1, panes.length - clampedLeftCount - clampedRightCount);
@@ -110,22 +99,24 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             api.start({x: 0, immediate: true});
         }, [paneData, api]);
 
+        const trackWidth = (trackPanes.length * maxPaneWidth);
+        const offset = bounds.width - trackWidth;
         const minTravel = 0;
-        const maxTravel = maxPaneWidth - tabWidth;
+        const maxTravel = maxPaneWidth - offset;
 
         // ... (useWheel gesture handler)
         const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
             // When scrolling to the right (revealing panes on the left), and we
-            // are at the start, convert a left tab back into the pinned pane.
-            if (x <= minTravel && dx < 0) {
-                setTabOffset(o => o + 1);
+            // are at the start, convert a left tab to a right one.
+            if (leftTabs.length > 0 && x <= minTravel && dx < 0) {
+                setRightTabCount(c => c + 1);
                 api.start({x: 0, immediate: active});
                 return;
             }
             // When scrolling to the left (revealing panes on the right), and we
-            // are at the end, convert the pinned pane into a left tab.
-            if (x >= maxTravel && dx > 0) {
-                setTabOffset(o => o - 1);
+            // are at the end, convert a right tab to a left one.
+            if (rightTabs.length > 0 && x >= maxTravel && dx > 0) {
+                setRightTabCount(c => c - 1);
                 api.start({x: 0, immediate: active});
                 return;
             }
@@ -160,7 +151,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     data-testid="track"
                     style={{
                         ...trackStyle,
-                        left: styles.x.to(x => (leftCount * tabWidth) + maxPaneWidth - x),
+                        left: styles.x.to(x => (leftTabs.length * tabWidth) + maxPaneWidth - x),
                         borderLeft: styles.x.to(x => (x !== 0 ? "1px solid rgba(0,0,0,0.05)" : "none")),
                         boxShadow: styles.x.to(x => (x !== 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none")),
                         willChange: styles.x.to(x => (x !== 0 ? "transform, box-shadow" : "auto")),
