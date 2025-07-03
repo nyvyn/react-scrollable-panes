@@ -1,7 +1,17 @@
 /**
- * A container component that manages a stack of horizontally sliding panes.
- * Handles pane navigation, responsive layout, and touch/mouse wheel interactions.
- * Automatically creates tabs when panes exceed available width.
+ *  A container component that manages a stack of horizontally sliding panes.
+ *  Handles pane navigation, responsive layout, and touch/mouse wheel interactions.
+ *
+ *  Slip stack behavior
+ *
+ *  Fixed-width panes line up horizontally.
+ *  New panes are inserted to the far right of the list of horizontal panes.
+ *  If the width of this track of panes exceeds the viewport,
+ *  then the left-most pane is converted to a vertical tab.
+ *  Additionally, the first pane in the horizontal track of panes is fixed to the left margin.
+ *  The remaining set of visible panes can slide over the first pinned pane.
+ *  Scrolling the track to the right can convert the leftmost pane into the now new pinned pane,
+ *  with the rightmost pane in the track converted to a right-aligned vertical tab.
  */
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
 import { SlipStackTab } from "@/SlipStackTab";
@@ -80,20 +90,16 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             ((((panes.length - 1) * maxPaneWidth) - bounds.width + tabWidth - 1)) / (maxPaneWidth - tabWidth))
         );
 
-        // Number of right tabs, which "steal" from the left tabs.
+        // Number of right tabs, which take from the left tabs.
         const [rightTabCount, setRightTabCount] = useState(0);
 
-        // Ensure the tab counts are within valid bounds.
-        const clampedLeftCount = Math.min(initialTabCount, panes.length - 1);
-        const clampedRightCount = Math.min(rightTabCount, Math.max(0, panes.length - clampedLeftCount - 1));
-
-        // The remaining panes are visible in the main area.
-        const mainCount = Math.max(1, panes.length - clampedLeftCount - clampedRightCount);
+        // Left tab count by deduction
+        const leftTabCount = Math.max(0, initialTabCount - rightTabCount);
 
         // Partition panes into their respective sections based on the calculated counts.
-        const leftTabs = panes.slice(0, clampedLeftCount);
-        const [pinnedPane, ...trackPanes] = panes.slice(clampedLeftCount, clampedLeftCount + mainCount);
-        const rightTabs = panes.slice(clampedLeftCount + mainCount);
+        const leftTabs = panes.slice(0, leftTabCount);
+        const [pinnedPane, ...trackPanes] = panes.slice(leftTabCount, panes.length - rightTabCount);
+        const rightTabs = panes.slice(panes.length - rightTabCount);
 
         useEffect(() => {
             api.start({x: 0, immediate: true});
@@ -106,15 +112,15 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         // ... (useWheel gesture handler)
         const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
-            // When scrolling to the right (revealing panes on the left), and we
-            // are at the start, convert a left tab to a right one.
+            // When scrolling to the right (revealing panes on the left),
+            // and we are at the start, convert a left tab to a right one.
             if (leftTabs.length > 0 && x <= minTravel && dx < 0) {
                 setRightTabCount(c => c + 1);
                 api.start({x: 0, immediate: active});
                 return;
             }
-            // When scrolling to the left (revealing panes on the right), and we
-            // are at the end, convert a right tab to a left one.
+            // When scrolling to the left (revealing panes on the right),
+            // and we are at the end, convert a right tab to a left one.
             if (rightTabs.length > 0 && x >= maxTravel && dx > 0) {
                 setRightTabCount(c => c - 1);
                 api.start({x: 0, immediate: active});
@@ -143,7 +149,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 ref={viewportRef}
                 style={viewportStyle}
             >
-                {leftTabs.map(p => renderTab(p, "left"))}
+                {leftTabs.map(tab => renderTab(tab, "left"))}
 
                 {pinnedPane && renderPane(pinnedPane)}
 
@@ -162,7 +168,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
                 <div style={{flexGrow: 1}}/>
 
-                {rightTabs.map(p => renderTab(p, "right"))}
+                {rightTabs.map(tab => renderTab(tab, "right"))}
             </div>
         );
     });

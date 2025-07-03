@@ -2,12 +2,12 @@ import { CSSProperties } from "react";
 
 const baseStyle: CSSProperties = {
     backgroundColor: "white",
+    position: "relative",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
     boxShadow: "0 0 15px 3px rgba(0,0,0,0.05)",
-    scrollSnapAlign: "start",
 };
 
 const leftStyle: CSSProperties = {
