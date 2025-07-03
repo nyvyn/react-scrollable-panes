@@ -83,19 +83,11 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         );
 
         // Track how many tabs are collapsed on each side.
-        const [leftTabCount, setLeftTabCount] = useState(initialTabCount);
-        const [rightTabCount, setRightTabCount] = useState(0);
+        const leftTabCount = initialTabCount;
+        const rightTabCount = 0;
         // Intermediate state: currently dragging a left tab into view
         const [pinningLeft, setPinningLeft] = useState(false);
 
-        // after you compute initialTabCount
-        useEffect(() => {
-            // only reset once you’ve actually measured
-            if (viewportBounds.width > 0) {
-                setLeftTabCount(initialTabCount);
-                setRightTabCount(0);
-            }
-        }, [initialTabCount, viewportBounds.width]);
 
         // Partition panes into their respective sections based on the current state.
         const leftTabs = pinningLeft
@@ -135,8 +127,6 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 // Once fully dragged over, convert the pinned tab to a right tab
                 if (pinningLeft && x <= -maxPaneWidth) {
                     setPinningLeft(false);
-                    setLeftTabCount(c => c - 1);
-                    setRightTabCount(c => c + 1);
                     api.start({x: 0, immediate: active});
                     return;
                 }
@@ -152,8 +142,6 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 }
                 // Convert a right tab back to a left one when reaching the end
                 if (rightTabs.length > 0 && x >= maxTravel) {
-                    setRightTabCount(c => c - 1);
-                    setLeftTabCount(c => c + 1);
                     api.start({x: 0, immediate: active});
                     return;
                 }
