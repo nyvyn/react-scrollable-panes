@@ -99,15 +99,29 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             ((((panes.length - 1) * maxPaneWidth) - bounds.width + tabWidth)) / (maxPaneWidth - tabWidth))
         );
 
-        // right tab count
+        // Track how many tabs are collapsed on each side.
+        const [leftTabCount, setLeftTabCount] = useState(initialTabCount);
         const [rightTabCount, setRightTabCount] = useState(0);
 
-        // Left tab count by deduction
-        const leftTabCount = initialTabCount - rightTabCount;
+        // Intermediate state: currently dragging a left tab into view
+        const [pinningLeft, setPinningLeft] = useState(false);
 
-        // Partition panes into their respective sections based on the calculated counts.
-        const leftTabs = panes.slice(0, leftTabCount);
-        const [pinnedPane, ...trackPanes] = panes.slice(leftTabCount, panes.length - rightTabCount);
+        // Reset tab counts whenever layout changes
+        useEffect(() => {
+            setLeftTabCount(initialTabCount);
+            setRightTabCount(0);
+            setPinningLeft(false);
+        }, [initialTabCount, panes.length]);
+
+        // Partition panes into their respective sections based on the current state.
+        const leftTabs = pinningLeft
+            ? panes.slice(1, leftTabCount)
+            : panes.slice(0, leftTabCount);
+
+        const [pinnedPane, ...trackPanes] = pinningLeft
+            ? panes.slice(0, panes.length - rightTabCount)
+            : panes.slice(leftTabCount, panes.length - rightTabCount);
+
         const rightTabs = panes.slice(panes.length - rightTabCount);
 
         useEffect(() => {
@@ -116,24 +130,43 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         const offset = (bounds.width - (trackPanes.length * maxPaneWidth));
         const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
-        const minTravel = 0;
+        const minTravel = pinningLeft ? -maxPaneWidth : 0;
         const maxTravel = maxPaneWidth + tabsWidth - offset;
 
         // ... (useWheel gesture handler)
         const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
-            // When scrolling to the right (revealing panes on the left),
-            // and we are at the start, convert a left tab to a right one.
-            if (leftTabs.length > 0 && x <= minTravel && dx < 0) {
-                setRightTabCount(c => c + 1);
-                api.start({x: 0, immediate: active});
-                return;
+            // When scrolling to the right (revealing panes on the left)
+            if (dx < 0) {
+                // Begin pinning the left-most tab when at the start
+                if (leftTabs.length > 0 && x <= 0 && !pinningLeft) {
+                    setPinningLeft(true);
+                    api.start({x: 0, immediate: active});
+                    return;
+                }
+                // Once fully dragged over, convert the pinned tab to a right tab
+                if (pinningLeft && x <= -maxPaneWidth) {
+                    setPinningLeft(false);
+                    setLeftTabCount(c => c - 1);
+                    setRightTabCount(c => c + 1);
+                    api.start({x: 0, immediate: active});
+                    return;
+                }
             }
-            // When scrolling to the left (revealing panes on the right),
-            // and we are at the end, convert a right tab to a left one.
-            if (rightTabs.length > 0 && x >= maxTravel && dx > 0) {
-                setRightTabCount(c => c - 1);
-                api.start({x: 0, immediate: active});
-                return;
+            // When scrolling to the left (revealing panes on the right)
+            if (dx > 0) {
+                // Cancel pinning if not completed
+                if (pinningLeft && x >= 0) {
+                    setPinningLeft(false);
+                    api.start({x: 0, immediate: active});
+                    return;
+                }
+                // Convert a right tab back to a left one when reaching the end
+                if (rightTabs.length > 0 && x >= maxTravel) {
+                    setRightTabCount(c => c - 1);
+                    setLeftTabCount(c => c + 1);
+                    api.start({x: 0, immediate: active});
+                    return;
+                }
             }
             // Otherwise, update position of track
             api.start({x, immediate: active});
