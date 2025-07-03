@@ -209,6 +209,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     {`
                         Min X: ${minTravel}
                         Max X: ${maxTravel}
+                        Pinning: ${pinningLeft}
                         Left Tabs: ${leftTabCount}
                         Right Tabs: ${rightTabCount}
                     `}
