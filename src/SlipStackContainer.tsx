@@ -101,7 +101,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const rightTabs = panes.slice(panes.length - rightTabCount);
 
         // Calculated as the viewport - width of visible panes if stacked (which could exceed the viewport)
-        const offset = viewportBounds.width - ((panes.length - initialTabCount) * maxPaneWidth);
+        const offset = Math.min(0, viewportBounds.width - ((panes.length - initialTabCount) * maxPaneWidth));
         const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
         const minTravel = pinningLeft ? -maxPaneWidth : 0;
         const maxTravel = maxPaneWidth + tabsWidth - offset;
@@ -111,8 +111,8 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
         useEffect(() => {
-            api.start({x: maxTravel, immediate: true});
-        }, [panes, api, maxTravel]);
+            api.start({x: -offset, immediate: true});
+        }, [panes, api, offset]);
 
         // ... (useWheel gesture handler)
         const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
@@ -207,6 +207,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
                 <div style={{position: "absolute", bottom: 0}}>
                     {`
+                        Offset: ${offset}
                         Min X: ${minTravel}
                         Max X: ${maxTravel}
                         Pinning: ${pinningLeft}
