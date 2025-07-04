@@ -40,6 +40,7 @@ interface Props {
 export interface SlipStackHandle {
     /** Opens a new pane or navigates to an existing one by its identifier */
     openPane(next: SlipStackPaneData): void;
+
     /** Closes a pane by its identifier */
     closePane(id: string): void;
 }
@@ -69,7 +70,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
 
         // Expose the openPane and closePane handlers to external callers
-        useImperativeHandle(ref, () => ({ openPane, closePane }), [openPane, closePane]);
+        useImperativeHandle(ref, () => ({openPane, closePane}), [openPane, closePane]);
 
         // Width of viewport
         const [viewportRef, viewportBounds] = useMeasure();
@@ -113,7 +114,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         // Overlap is the viewport width subtracting the visible track width and tab width
         const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
         const panesWidth = ((panes.length - leftTabCount - rightTabCount) * maxPaneWidth);
-        const overlap = viewportBounds.width - tabsWidth - panesWidth;
+        const overlap = Math.min(0, viewportBounds.width - tabsWidth - panesWidth);
 
         // Boundaries for the track
         const minBound = leftTabCount > 0 ? overlap - maxPaneWidth : overlap;
@@ -154,11 +155,11 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const bind = useWheel(({active, offset: [x], direction: [dx], delta: [delta]}) => {
             const cx = (x: number) => {
                 return (overlap - x - (tabRefuge ? maxPaneWidth - tabWidth : 0));
-            }
+            };
 
             const debug = () => {
                 if (DEBUG) console.log("x, cx, overlap, min, max, delta", x, cx(x), overlap, minBound, maxBound, delta);
-            }
+            };
 
             // When scrolling to the right (revealing panes on the left)
             if (dx < 0 && delta < tabWidth) {
