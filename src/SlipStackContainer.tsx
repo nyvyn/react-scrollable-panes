@@ -38,8 +38,10 @@ interface Props {
  * Imperative handle for controlling the SlipStackContainer from a parent component
  */
 export interface SlipStackHandle {
-    /** Opens a new pane or navigates to an existing one by its ID */
+    /** Opens a new pane or navigates to an existing one by its identifier */
     openPane(next: SlipStackPaneData): void;
+    /** Closes a pane by its identifier */
+    closePane(id: string): void;
 }
 
 export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
@@ -61,8 +63,13 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             return i === -1 ? [...prev, next] : [...prev.filter(p => p.id !== next.id), next];
         }), [],);
 
-        // Expose the openPane handler to external callers
-        useImperativeHandle(ref, () => ({openPane}), [openPane]);
+        const closePane = useCallback((id: string) => {
+            setPanes((prev) => prev.filter((p) => p.id !== id));
+        }, []);
+
+
+        // Expose the openPane and closePane handlers to external callers
+        useImperativeHandle(ref, () => ({ openPane, closePane }), [openPane, closePane]);
 
         // Width of viewport
         const [viewportRef, viewportBounds] = useMeasure();
@@ -118,7 +125,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
         useEffect(() => {
-            api.start({x: overlap, immediate: true});
+            api.start({x: overlap, immediate: false});
         }, [panes, api, overlap]);
 
         /**
@@ -202,7 +209,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
             <SlipStackPane key={p.id} width={maxPaneWidth} style={extraStyle}>
-                {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane}) : p.element}
+                {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
             </SlipStackPane>
         );
 

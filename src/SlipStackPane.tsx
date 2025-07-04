@@ -10,7 +10,10 @@ import { CSSProperties, forwardRef, PropsWithChildren, ReactNode } from "react";
  *   • If the `id` already exists, every pane to its right is discarded
  *     and the matching pane becomes the right-most one.
  */
-export type SlipStackPaneRenderer = (args: { openPane: (next: SlipStackPaneData) => void }) => ReactNode;
+export type SlipStackPaneRenderer = (args: {
+    openPane: (next: SlipStackPaneData) => void;
+    closePane: (id: string) => void;
+}) => ReactNode;
 
 /**
  *  Metadata required by `SlipStackContainer` to describe a single pane in the horizontal stack.
