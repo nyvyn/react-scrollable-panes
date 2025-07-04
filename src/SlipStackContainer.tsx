@@ -108,9 +108,10 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const rightTabs = panes.slice(panes.length - rightTabCount);
 
         // Overlap is the viewport width subtracting the visible track width and tab width
-        const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
-        const panesWidth = ((panes.length - leftTabCount - rightTabCount) * maxPaneWidth);
-        const overlap = Math.min(0, viewportBounds.width - tabsWidth - panesWidth);
+        const overlap = Math.min(0,
+            viewportBounds.width -
+            (leftTabCount + rightTabCount) * tabWidth -
+            (panes.length - leftTabCount - rightTabCount) * maxPaneWidth);
 
         // Boundaries for the track
         const minBound = tabRefuge ? -(maxPaneWidth - tabWidth) : overlap;
