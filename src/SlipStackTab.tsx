@@ -2,7 +2,7 @@ import { CSSProperties } from "react";
 
 const baseStyle: CSSProperties = {
     backgroundColor: "white",
-    position: "relative",
+    height: "100%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",

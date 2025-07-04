@@ -64,10 +64,12 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             return i === -1 ? [...prev, next] : [...prev.filter(p => p.id !== next.id), next];
         }), [],);
 
+        /**
+         *  Removes the pane with the specified id from the list of panes.
+         */
         const closePane = useCallback((id: string) => {
             setPanes((prev) => prev.filter((p) => p.id !== id));
         }, []);
-
 
         // Expose the openPane and closePane handlers to external callers
         useImperativeHandle(ref, () => ({openPane, closePane}), [openPane, closePane]);
@@ -97,28 +99,23 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const [tabOffset, setTabOffset] = useState(0);
 
         // Track how many tabs are collapsed on each side.
-        const leftTabCount = initialTabCount - tabOffset;
+        const leftTabCount = initialTabCount - tabOffset - (tabRefuge ? 1 : 0);
         const rightTabCount = tabOffset;
 
         // Partition panes into their respective sections based on the current state.
-        const leftTabs = tabRefuge
-            ? panes.slice(1, leftTabCount)
-            : panes.slice(0, leftTabCount);
-
-        const [pinnedPane, ...trackPanes] = tabRefuge
-            ? panes.slice(0, panes.length - rightTabCount)
-            : panes.slice(leftTabCount, panes.length - rightTabCount);
-
+        const leftTabs = panes.slice(0, leftTabCount);
+        const [pinnedPane, ...trackPanes] = panes.slice(leftTabCount, panes.length - rightTabCount);
         const rightTabs = panes.slice(panes.length - rightTabCount);
 
         // Overlap is the viewport width subtracting the visible track width and tab width
-        const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
-        const panesWidth = ((panes.length - leftTabCount - rightTabCount) * maxPaneWidth);
-        const overlap = Math.min(0, viewportBounds.width - tabsWidth - panesWidth);
+        const overlap = Math.min(0,
+            viewportBounds.width -
+            (leftTabCount + rightTabCount) * tabWidth -
+            (panes.length - leftTabCount - rightTabCount) * maxPaneWidth);
 
         // Boundaries for the track
-        const minBound = leftTabCount > 0 ? overlap - maxPaneWidth : overlap;
-        const maxBound = rightTabCount > 0 ? -overlap : 0;
+        const minBound = tabRefuge ? -(maxPaneWidth - tabWidth) : overlap;
+        const maxBound = tabRefuge ? overlap : 0;
 
         // Configure spring animation starting at zero position
         // styles contains the animated values and api provides methods to control the animation
@@ -126,7 +123,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         useEffect(() => {
             api.start({x: overlap, immediate: false});
-        }, [panes, api, overlap]);
+        }, [panes, api]);
 
         /**
          *  The wheel handler is set to the viewport to enable capturing events over the entire component.
@@ -154,7 +151,9 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
          */
         const bind = useWheel(({active, offset: [x], direction: [dx], delta: [delta]}) => {
             const cx = (x: number) => {
-                return (overlap - x - (tabRefuge ? maxPaneWidth - tabWidth : 0));
+                // this normalizes "x" based on the negative left
+                const adjustedX = overlap - x;
+                return Math.max(minBound, Math.min(maxBound, adjustedX));
             };
 
             const debug = () => {
@@ -164,10 +163,10 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             // When scrolling to the right (revealing panes on the left)
             if (dx < 0 && delta < tabWidth) {
                 // Begin providing refuge to the left-most tab when all the way to the right
-                if (!tabRefuge && leftTabs.length > 0 && cx(x) >= 0) {
+                if (!tabRefuge && leftTabCount > 0 && cx(x) >= 0) {
                     debug();
                     setTabRefuge(true);
-                    api.start({x: cx(x), immediate: true});
+                    api.start({x: cx(-(maxPaneWidth - tabWidth)), immediate: true});
                     return;
                 }
                 // When the rightmost pane would be hidden, convert it to a right-tab.
@@ -183,15 +182,15 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             // When scrolling to the left (revealing panes on the right)
             if (dx > 0) {
                 // When only rightmost pane is fully showing, pull the next tab into the refuge
-                if (!tabRefuge && rightTabs.length > 0 && cx(x) <= overlap) {
+                if (!tabRefuge && rightTabCount > 0 && cx(x) <= overlap) {
                     debug();
                     setTabRefuge(true);
                     setTabOffset(t => t - 1);
-                    api.start({x: cx(x), immediate: true});
+                    api.start({x: cx(maxPaneWidth - tabWidth), immediate: true});
                     return;
                 }
                 // When only a tabs-width of the refuge pane is showing, convert to left-tab
-                if (tabRefuge && cx(x) <= (maxPaneWidth - tabWidth) * -1) {
+                if (tabRefuge && cx(x) <= -(maxPaneWidth - tabWidth)) {
                     debug();
                     setTabRefuge(false);
                     api.start({x: cx(x), immediate: true});
@@ -203,7 +202,6 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             api.start({x: cx(x), immediate: active});
         }, {
             axis: "x",
-            bounds: {left: minBound, right: maxBound},
             preventDefault: true,
         });
 
@@ -220,7 +218,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         return (
             <div
                 {...bind()}
-                key={"slipstack-viewport"}
+                id="slipstack-viewport"
                 ref={viewportRef}
                 data-testid="viewport"
                 style={{
@@ -233,7 +231,16 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     overscrollBehaviorX: "contain"
                 }}
             >
-                {leftTabs.map(tab => renderTab(tab, "left"))}
+                <div
+                    id="left-tab-stack"
+                    style={{
+                        position: "absolute",
+                        display: "flex",
+                        left: 0
+                    }}
+                >
+                    {leftTabs.map(tab => renderTab(tab, "left"))}
+                </div>
 
                 {pinnedPane && renderPane(pinnedPane, {
                     position: "absolute",
@@ -241,7 +248,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 })}
 
                 <animated.div
-                    key={"slipstack-track"}
+                    id="slipstack-track"
                     style={{
                         position: "absolute",
                         display: "flex",
@@ -257,9 +264,16 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     {trackPanes.map(p => renderPane(p))}
                 </animated.div>
 
-                <div style={{flexGrow: 1}}/>
-
-                {rightTabs.map(tab => renderTab(tab, "right"))}
+                <div
+                    id="right-tab-stack"
+                    style={{
+                        position: "absolute",
+                        display: "flex",
+                        right: 0
+                    }}
+                >
+                    {rightTabs.map(tab => renderTab(tab, "right"))}
+                </div>
 
                 {DEBUG && (<animated.div style={{position: "absolute", bottom: 0}}>
                     {styles.x.to(x => `
