@@ -114,6 +114,8 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
         const panesWidth = ((panes.length - leftTabCount - rightTabCount) * maxPaneWidth);
         const overlap = viewportBounds.width - tabsWidth - panesWidth;
+
+        // Boundaries for the track
         const minBound = leftTabCount > 0 ? overlap - maxPaneWidth : overlap;
         const maxBound = rightTabCount > 0 ? -overlap : 0;
 
@@ -172,7 +174,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     debug();
                     setTabRefuge(false);
                     setTabOffset(t => t + 1);
-                    api.start({x: cx(overlap), immediate: true});
+                    api.start({x: cx(x), immediate: true});
                     return;
                 }
             }
@@ -184,7 +186,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     debug();
                     setTabRefuge(true);
                     setTabOffset(t => t - 1);
-                    api.start({x: cx(overlap), immediate: true});
+                    api.start({x: cx(x), immediate: true});
                     return;
                 }
                 // When only a tabs-width of the refuge pane is showing, convert to left-tab
@@ -217,7 +219,9 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         return (
             <div
                 {...bind()}
+                key={"slipstack-viewport"}
                 ref={viewportRef}
+                data-testid="viewport"
                 style={{
                     position: "relative",
                     display: "flex",
@@ -236,7 +240,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 })}
 
                 <animated.div
-                    data-testid="track"
+                    key={"slipstack-track"}
                     style={{
                         position: "absolute",
                         display: "flex",
