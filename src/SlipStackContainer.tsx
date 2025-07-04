@@ -118,7 +118,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
         useEffect(() => {
-            api.start({x: overlap, immediate: false});
+            api.start({x: overlap, immediate: true});
         }, [panes, api, overlap]);
 
         /**
