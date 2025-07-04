@@ -20,6 +20,8 @@ import { useWheel } from "@use-gesture/react";
 import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import useMeasure from "react-use-measure";
 
+const DEBUG = true;
+
 const tabWidth = 40;
 
 /**
@@ -101,59 +103,101 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         const rightTabs = panes.slice(panes.length - rightTabCount);
 
-        // Calculated as the viewport - width of visible panes if stacked (which could exceed the viewport)
+        // Overlap is the viewport width subtracting the visible track width and tab width
         const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
+        const panesWidth = ((panes.length - leftTabCount - rightTabCount) * maxPaneWidth);
         const overlap = Math.min(
             0,
-            viewportBounds.width - tabsWidth - ((panes.length - leftTabCount - rightTabCount) * maxPaneWidth)
+            viewportBounds.width - tabsWidth - panesWidth,
         );
-        const maxTravel = 0;
+        const minBound = leftTabCount > 0 ? overlap - maxPaneWidth : overlap;
+        const maxBound = rightTabCount ? 40 : 0;
 
         // Configure spring animation starting at zero position
         // styles contains the animated values and api provides methods to control the animation
         const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
         useEffect(() => {
-            api.start({x: -overlap, immediate: true});
+            api.start({x: overlap, immediate: false});
         }, [panes, api, overlap]);
 
-        // ... (useWheel gesture handler)
-        const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
+        /**
+         *  The wheel handler is set to the viewport to enable capturing events over the entire component.
+         *  The only part that scrolls is the track, and it only scrolls horizontally.
+         *  The left tabs are left-aligned, the right the opposite with a flex spacer in between to fill.
+         *  If there is at least one pane, then the first pane that's not a tab is pinned, absolute positioned.
+         *  If there is more than one pane visible, then those belong to the track.
+         *
+         *  "X" only applies to the track, and if there's a track, then there is one pinned pane.
+         *  "X" is zero when the left edge of the track touches the right edge of the pinned pane.
+         *  The sliding effect is determined by a negative left margin equal to the overlap -
+         *  which is the amount of track that overlaps the right edge of the viewport (hidden).
+         *
+         *  When a tab is to be removed, it moves to the tab refuge, which fills the position of the pinned pane.
+         *  (if there was already a pinned pane, it now joins the track).
+         *  To appear as though the previously pinned pane joined the track in place, "X" must be adjusted
+         *  to the left equal to the width of a pane subtracting the width of the tab that no longer exists.
+         *
+         *  When there is at least one tab, and none in the refuge, then dragging the track to position zero
+         *  (which is the right side of the pinned pane connected to the left side of the track)
+         *  and the refuge is activated.
+         *
+         *  To push a tab from the refuge to the left, "X" needs to meet or exceed the overlap
+         *  (sliding over the pinned pane).
+         */
+        const bind = useWheel(({active, offset: [x], direction: [dx], delta: [delta]}) => {
+            const cx = (x: number) => {
+                return (overlap - x - (tabRefuge ? maxPaneWidth - tabWidth : 0));
+            }
+
+            const debug = () => {
+                if (DEBUG) console.log("x, cx, overlap, min, max, delta", x, cx(x), overlap, minBound, maxBound, delta);
+            }
+
             // When scrolling to the right (revealing panes on the left)
-            if (dx < 0) {
-                // Begin pinning the left-most tab when at the start
-                if (leftTabs.length > 0 && x <= 0 && !tabRefuge) {
+            if (dx < 0 && delta < tabWidth) {
+                // Begin providing refuge to the left-most tab when all the way to the right
+                if (!tabRefuge && leftTabs.length > 0 && cx(x) >= 0) {
+                    debug();
                     setTabRefuge(true);
+                    api.start({x: cx(x), immediate: true});
+                    return;
                 }
-                // Once fully dragged over, convert the pinned tab to a right tab
-                if (tabRefuge && x <= -maxPaneWidth) {
+                // When the rightmost pane would be hidden, convert it to a right-tab.
+                if (tabRefuge && cx(x) >= overlap) {
+                    debug();
                     setTabRefuge(false);
                     setTabOffset(t => t + 1);
-                    api.start({ x: -overlap + x + maxPaneWidth, immediate: true });
+                    api.start({x: cx(overlap), immediate: true});
                     return;
                 }
             }
 
             // When scrolling to the left (revealing panes on the right)
             if (dx > 0) {
-                // Cancel pinning if not completed
-                if (tabRefuge && x >= 0) {
-                    setTabRefuge(false);
-                }
-                // Convert a right tab back to a left one when reaching the end
-                if (rightTabs.length > 0 && x >= maxTravel) {
+                // When only rightmost pane is fully showing, pull the next tab into the refuge
+                if (!tabRefuge && rightTabs.length > 0 && cx(x) <= overlap) {
+                    debug();
                     setTabRefuge(true);
                     setTabOffset(t => t - 1);
-                    api.start({ x: -overlap + x - maxPaneWidth, immediate: true });
+                    api.start({x: cx(overlap), immediate: true});
+                    return;
+                }
+                // When only a tabs-width of the refuge pane is showing, convert to left-tab
+                if (tabRefuge && cx(x) <= (maxPaneWidth - tabWidth) * -1) {
+                    debug();
+                    setTabRefuge(false);
+                    api.start({x: cx(x), immediate: true});
                     return;
                 }
             }
 
             // Otherwise, update position of track
-            api.start({x: -overlap + x, immediate: active});
+            api.start({x: cx(x), immediate: active});
         }, {
             axis: "x",
-            bounds: {left: overlap, right: 0},
+            bounds: {left: minBound, right: maxBound},
+            preventDefault: true,
         });
 
         const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
@@ -177,6 +221,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     width: "100%",
                     height: "100%",
                     overflow: "hidden",
+                    overscrollBehaviorX: "contain"
                 }}
             >
                 {leftTabs.map(tab => renderTab(tab, "left"))}
@@ -194,7 +239,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         flexDirection: "row",
                         height: "100%",
                         left: (leftTabs.length * tabWidth) + maxPaneWidth,
-                        marginLeft: styles.x.to(x => -x),
+                        marginLeft: styles.x.to(x => x),
                         borderLeft: styles.x.to(x => (x !== 0 ? "1px solid rgba(0,0,0,0.05)" : "none")),
                         boxShadow: styles.x.to(x => (x !== 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none")),
                         willChange: styles.x.to(x => (x !== 0 ? "transform, box-shadow" : "auto")),
@@ -207,15 +252,15 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
                 {rightTabs.map(tab => renderTab(tab, "right"))}
 
-                <div style={{position: "absolute", bottom: 0}}>
-                    {`
+                {DEBUG && (<animated.div style={{position: "absolute", bottom: 0}}>
+                    {styles.x.to(x => `
+                        x: ${(x).toFixed(0)}
+                        Min: ${overlap}
+                        Max: ${maxBound}
                         Overlap: ${overlap}
-                        TabsWidth: ${tabsWidth}
-                        Pinning: ${tabRefuge}
-                        Left Tabs: ${leftTabCount}
-                        Right Tabs: ${rightTabCount}
-                    `}
-                </div>
+                        Refuge: ${tabRefuge}
+                    `)}
+                </animated.div>)}
             </div>
         );
     });
