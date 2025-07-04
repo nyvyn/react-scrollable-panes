@@ -113,12 +113,9 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         // Overlap is the viewport width subtracting the visible track width and tab width
         const tabsWidth = (leftTabCount + rightTabCount) * tabWidth;
         const panesWidth = ((panes.length - leftTabCount - rightTabCount) * maxPaneWidth);
-        const overlap = Math.min(
-            0,
-            viewportBounds.width - tabsWidth - panesWidth,
-        );
+        const overlap = viewportBounds.width - tabsWidth - panesWidth;
         const minBound = leftTabCount > 0 ? overlap - maxPaneWidth : overlap;
-        const maxBound = rightTabCount ? 40 : 0;
+        const maxBound = rightTabCount > 0 ? -overlap : 0;
 
         // Configure spring animation starting at zero position
         // styles contains the animated values and api provides methods to control the animation
