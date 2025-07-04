@@ -17,7 +17,7 @@ import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipS
 import { SlipStackTab } from "@/SlipStackTab";
 import { animated, useSpring } from "@react-spring/web";
 import { useWheel } from "@use-gesture/react";
-import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import useMeasure from "react-use-measure";
 
 const DEBUG = true;
@@ -121,9 +121,16 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         // styles contains the animated values and api provides methods to control the animation
         const [styles, api] = useSpring(() => ({x: 0, immediate: true}));
 
+        // Keep track of the previous overlap so the track position can be
+        // adjusted relative to its current value when panes are added or
+        // removed. This prevents a visible jump when the layout changes.
+        const previousOverlap = useRef(overlap);
+
         useEffect(() => {
-            api.start({x: overlap, immediate: false});
-        }, [panes, api]);
+            const delta = overlap - previousOverlap.current;
+            previousOverlap.current = overlap;
+            api.start({x: styles.x.get() + delta, immediate: false});
+        }, [panes, overlap, api, styles.x]);
 
         /**
          *  The wheel handler is set to the viewport to enable capturing events over the entire component.
