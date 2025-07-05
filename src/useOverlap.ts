@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState, RefObject } from "react";
+import { useLayoutEffect, useState, RefObject, useRef } from "react";
 
 export type Rect = { left: number; top: number; right: number; bottom: number };
 
@@ -38,7 +38,7 @@ function equal(a: boolean[][], b: boolean[][]): boolean {
  * @return {boolean[][]} A 2D boolean array indicating overlapping states, where `result[i][j]` is true if `refs[i]` and `refs[j]` overlap, and false otherwise.
  */
 export function useOverlap(refs: RefObject<HTMLDivElement | null>[]): boolean[][] {
-  const [overlaps, setOverlaps] = useState<boolean[][]>([]);
+  const overlaps = useRef<boolean[][]>([]);
 
   useLayoutEffect(() => {
     const rects = refs.map((r) => r.current?.getBoundingClientRect());
@@ -51,8 +51,8 @@ export function useOverlap(refs: RefObject<HTMLDivElement | null>[]): boolean[][
       }
     }
 
-    setOverlaps((prev) => (equal(prev, result) ? prev : result));
+    overlaps.current = equal(overlaps.current, result) ? overlaps.current : result;
   }, [refs]);
 
-  return overlaps;
+  return overlaps.current;
 }
