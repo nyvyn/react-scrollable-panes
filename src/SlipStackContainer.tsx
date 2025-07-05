@@ -14,11 +14,10 @@
  *  with the rightmost pane in the track converted to a right-aligned vertical tab.
  */
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
-import { SlipStackTab } from "@/SlipStackTab";
 import { animated, useSpring } from "@react-spring/web";
+import { useMeasure } from "@uidotdev/usehooks";
 import { useWheel } from "@use-gesture/react";
 import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
-import useMeasure from "react-use-measure";
 
 const DEBUG = true;
 
@@ -76,48 +75,28 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         // Width of viewport
         const [viewportRef, viewportBounds] = useMeasure();
+        const viewportWidth = viewportBounds.width ?? 0;
 
         // Width of a single pane, capped at the larger of container width or passed value
-        const maxPaneWidth = Math.min(paneWidth, viewportBounds.width);
+        const maxPaneWidth = Math.min(paneWidth, viewportWidth);
 
         // Overlap is the viewport width subtracting the visible track width and tab width
-        const overlap = Math.min(0, Math.floor(viewportBounds.width - panes.length * maxPaneWidth));
+        const overlap = Math.min(0, Math.floor(viewportWidth - panes.length * maxPaneWidth));
 
         // Boundaries for the track
         const minBound = overlap;
         const maxBound = 0;
 
-        // Configure spring animation starting at zero position
-        // styles contains the animated values and api provides methods to control the animation
+        // The first render, panes is empty, so no positioning is applied
         const [styles, api] = useSpring(() => ({x: 0}));
 
+        // When panes are updated, move them to overlap.
         useEffect(() => {
             api.start({x: overlap, immediate: false});
         }, [panes, api, overlap]);
 
         /**
          *  The wheel handler is set to the viewport to enable capturing events over the entire component.
-         *  The only part that scrolls is the track, and it only scrolls horizontally.
-         *  The left tabs are left-aligned, the right the opposite with a flex spacer in between to fill.
-         *  If there is at least one pane, then the first pane that's not a tab is pinned, absolute positioned.
-         *  If there is more than one pane visible, then those belong to the track.
-         *
-         *  "X" only applies to the track, and if there's a track, then there is one pinned pane.
-         *  "X" is zero when the left edge of the track touches the right edge of the pinned pane.
-         *  The sliding effect is determined by a negative left margin equal to the overlap -
-         *  which is the amount of track that overlaps the right edge of the viewport (hidden).
-         *
-         *  When a tab is to be removed, it moves to the tab refuge, which fills the position of the pinned pane.
-         *  (if there was already a pinned pane, it now joins the track).
-         *  To appear as though the previously pinned pane joined the track in place, "X" must be adjusted
-         *  to the left equal to the width of a pane subtracting the width of the tab that no longer exists.
-         *
-         *  When there is at least one tab, and none in the refuge, then dragging the track to position zero
-         *  (which is the right side of the pinned pane connected to the left side of the track)
-         *  and the refuge is activated.
-         *
-         *  To push a tab from the refuge to the left, "X" needs to meet or exceed the overlap
-         *  (sliding over the pinned pane).
          */
         const bind = useWheel(({offset: [x]}) => {
             const cx = (x: number) => {
@@ -138,10 +117,6 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             <SlipStackPane key={p.id} width={maxPaneWidth} style={extraStyle}>
                 {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
             </SlipStackPane>
-        );
-
-        const renderTab = (p: SlipStackPaneData, side: "left" | "right", extraStyle?: CSSProperties) => (
-            <SlipStackTab key={p.id} title={p.title} width={tabWidth} side={side} style={extraStyle}/>
         );
 
         return (
@@ -170,10 +145,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         position: "sticky",
                         left: index * tabWidth,
                         right: (panes.length - index) * tabWidth - maxPaneWidth,
-                        borderLeft: "1px solid rgba(0,0,0,0.05)",
-                        boxShadow: "-6px 0 15px -3px rgba(0,0,0,0.05)",
                     }))}
-
                 </animated.div>
 
                 {DEBUG && (<animated.div style={{position: "absolute", bottom: 0}}>
@@ -182,7 +154,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         Min: ${minBound}
                         Max: ${maxBound}
                         Overlap: ${overlap}
-                        Bounds: ${viewportBounds.width}
+                        Bounds: ${viewportWidth}
                         Panes: ${panes.length}
                     `)}
                 </animated.div>)}

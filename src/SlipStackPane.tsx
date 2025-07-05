@@ -36,8 +36,8 @@ const basePaneStyle: CSSProperties = {
     flexShrink: "0",
     flexGrow: "0",
     overflowY: "scroll",
-    borderRight: "1px solid rgba(0,0,0,0.1)",
-    scrollSnapAlign: "start",
+    borderLeft: "1px solid rgba(0,0,0,0.05)",
+    boxShadow: "-6px 0 15px -3px rgba(0,0,0,0.05)",
 };
 
 type Props = PropsWithChildren<{
