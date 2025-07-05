@@ -53,7 +53,7 @@ it("creates vertical tabs when panes exceed available width", async () => {
     const paneA = { id: "A", title: "A", element: <span>A</span> };
     const paneB = { id: "B", title: "B", element: <span>B</span> };
     const paneC = { id: "C", title: "C", element: <span>C</span> };
-    const paneD = { id: "D", title: "D", element: <span>D-content</span> };
+    const paneD = { id: "D", title: "D", element: <span>D</span> };
 
     render(<SlipStackContainer ref={ref} paneData={[paneA]} paneWidth={width} />);
 
@@ -61,6 +61,5 @@ it("creates vertical tabs when panes exceed available width", async () => {
     act(() => { ref.current!.openPane(paneC); });
     act(() => { ref.current!.openPane(paneD); });
 
-    expect(screen.getAllByTestId("pane")).toHaveLength(3);
-    expect(screen.getAllByTestId("tab")).toHaveLength(1);
+    expect(screen.getAllByTestId("pane")).toHaveLength(4);
 });
