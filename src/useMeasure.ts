@@ -18,7 +18,7 @@ export type MeasureBounds = {
  * @return {[RefObject<T>, MeasureBounds]} A tuple containing a React reference object for the element and
  * its current measured bounding box values.
  */
-export default function useMeasure<T extends HTMLElement>(): [(instance: T | null) => void, MeasureBounds] {
+export function useMeasure<T extends HTMLElement>(): [(instance: T | null) => void, MeasureBounds] {
     const [node, setNode] = useState<T | null>(null);
     const ref = useCallback((node: T | null) => {
         setNode(node);
