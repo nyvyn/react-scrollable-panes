@@ -1,4 +1,4 @@
-import { CSSProperties, forwardRef, PropsWithChildren, ReactNode } from "react";
+import { CSSProperties, forwardRef, PropsWithChildren, ReactNode, useEffect, useState } from "react";
 
 /**
  *  A renderer that can be used instead of a plain ReactNode for the
@@ -40,27 +40,63 @@ const basePaneStyle: CSSProperties = {
     boxShadow: "-6px 0 15px -3px rgba(0,0,0,0.05)",
 };
 
+const tabWidth = 40;
+
 type Props = PropsWithChildren<{
     width: number;
+    title: string;
     style?: CSSProperties;
     /** When true, indicates this pane overlaps another */
     isOverlapping?: boolean;
 }>;
 
 export const SlipStackPane = forwardRef<HTMLDivElement, Props>(
-    ({width, style, isOverlapping, children}, ref) => (
-        <div
-            ref={ref}
-            data-testid="pane"
-            style={{
-                ...basePaneStyle,
-                width,
-                ...(isOverlapping ? { border: "2px solid red" } : {}),
-                ...style
-            }}
-        >
-            {children}
-        </div>
-    ),
+    ({width, title, style, isOverlapping, children}, ref) => {
+        const divRef = ref as React.RefObject<HTMLDivElement>;
+
+        const [collapsed, setCollapsed] = useState(false);
+        const [side, setSide] = useState<"left" | "right" | null>(null);
+
+        useEffect(() => {
+            if (!divRef.current) return;
+            const node = divRef.current;
+            const update = () => {
+                setCollapsed(node.dataset.collapsed === "true");
+                setSide((node.dataset.side as "left" | "right") ?? null);
+            };
+            update();
+            const mo = new MutationObserver(update);
+            mo.observe(node, {attributes: true});
+            return () => mo.disconnect();
+        }, [divRef]);
+        const paneStyle: CSSProperties = {
+            ...basePaneStyle,
+            width: collapsed ? tabWidth : width,
+            ...(isOverlapping ? { border: "2px solid red" } : {}),
+            ...style,
+            display: collapsed ? "flex" : "flex",
+            alignItems: collapsed ? "center" : undefined,
+            justifyContent: collapsed ? "center" : undefined,
+        };
+
+        const titleStyle: CSSProperties = {
+            padding: 8,
+            borderBottom: "1px solid rgba(0,0,0,0.05)",
+            fontWeight: "bold",
+        };
+
+        const rotated: CSSProperties = collapsed ? {
+            writingMode: side === "right" ? "vertical-lr" : "vertical-rl",
+        } : {};
+
+        return (
+            <div ref={ref} data-testid="pane" style={paneStyle}>
+                <div className="slipstack-title" style={{...titleStyle, ...rotated}}>{title}</div>
+                {!collapsed && (
+                    <div className="slipstack-content" style={{flex: 1}}>{children}</div>
+                )}
+            </div>
+        );
+    },
 );
 SlipStackPane.displayName = "SlipStackPane";

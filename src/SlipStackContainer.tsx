@@ -104,6 +104,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 x: overlap,
                 immediate: false,
             });
+            update();
         }, [panes, api, overlap]);
 
         const bind = useWheel(({offset: [x]}) => {
@@ -114,6 +115,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
             // Otherwise, update position of track
             api.start({x: cx(x), immediate: true});
+            update();
         }, {
             axis: "x",
             bounds: {left: minBound, right: maxBound},
@@ -121,11 +123,38 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             threshold: 0,
         });
 
+        const update = useCallback(() => {
+            if (!viewportRef.current) return;
+            const vp = viewportRef.current.getBoundingClientRect();
+            paneRefs.forEach((r) => {
+                const el = r.current;
+                if (!el) return;
+                const rect = el.getBoundingClientRect();
+                const collapsed = rect.width <= tabWidth + 1;
+                el.dataset.collapsed = collapsed ? "true" : "false";
+                if (collapsed) {
+                    el.dataset.side = rect.left <= vp.left + 1 ? "left" : "right";
+                } else {
+                    delete el.dataset.side;
+                }
+            });
+            viewportRef.current.dataset.track = styles.x.get().toFixed(0);
+        }, [paneRefs, viewportRef, styles.x]);
+
+        useEffect(() => {
+            update();
+            window.addEventListener("resize", update);
+            return () => {
+                window.removeEventListener("resize", update);
+            };
+        }, [update]);
+
         const renderPane = (p: SlipStackPaneData, i: number, extraStyle?: CSSProperties) => (
             <SlipStackPane
                 key={p.id}
                 ref={paneRefs[i]}
                 width={maxPaneWidth}
+                title={p.title}
                 isOverlapping={overlaps[i]?.some(Boolean)}
                 style={extraStyle}
             >
