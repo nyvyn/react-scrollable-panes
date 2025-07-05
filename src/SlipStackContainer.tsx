@@ -95,11 +95,10 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         );
 
         // Intermediate state: currently dragging a left tab into view
-        const [tabRefuge, setTabRefuge] = useState(false);
         const [tabOffset, setTabOffset] = useState(0);
 
         // Track how many tabs are collapsed on each side.
-        const leftTabCount = initialTabCount - tabOffset - (tabRefuge ? 1 : 0);
+        const leftTabCount = initialTabCount - tabOffset;
         const rightTabCount = tabOffset;
 
         // Partition panes into their respective sections based on the current state.
@@ -111,23 +110,22 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const overlap = Math.min(0,
             Math.floor(viewportBounds.width -
                 ((leftTabs.length + rightTabs.length) * tabWidth) -
-                ((panes.length - leftTabs.length - rightTabs.length - (tabRefuge ? 1 : 0)) * maxPaneWidth))
+                (panes.length - leftTabs.length - rightTabs.length) * maxPaneWidth)
         );
 
-        const trackOffset = (leftTabs.length * tabWidth) + maxPaneWidth + (tabRefuge ? -(maxPaneWidth) : 0);
+        const trackOffset = (leftTabs.length * tabWidth) + maxPaneWidth;
 
         // Boundaries for the track
-        const minBound = tabRefuge ? -(maxPaneWidth - tabWidth) : overlap;
-        const maxBound = tabRefuge ? overlap - tabWidth : 0;
+        const minBound = overlap;
+        const maxBound = 0;
 
         // Configure spring animation starting at zero position
         // styles contains the animated values and api provides methods to control the animation
         const [styles, api] = useSpring(() => ({x: 0}));
 
         useEffect(() => {
-            console.log("overlap", overlap);
             api.start({x: overlap, immediate: false});
-        }, [panes, api, viewportBounds.width]);
+        }, [api, overlap]);
 
         /**
          *  The wheel handler is set to the viewport to enable capturing events over the entire component.
@@ -165,15 +163,9 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
             // When scrolling to the right (revealing panes on the left)
             if (dx < 0) {
-                // Begin providing refuge to the left-most tab when all the way to the right
-                if (!tabRefuge && leftTabCount > 0 && cx(x) >= 0) {
-                    debug();
-                    setTabRefuge(true);
-                }
                 // When the rightmost pane would be hidden, convert it to a right-tab.
-                if (tabRefuge && cx(x) >= overlap) {
+                if (leftTabs.length > 0 && cx(x) >= 0) {
                     debug();
-                    setTabRefuge(false);
                     setTabOffset(t => t + 1);
                 }
             }
@@ -181,15 +173,9 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             // When scrolling to the left (revealing panes on the right)
             if (dx > 0) {
                 // When only rightmost pane is fully showing, pull the next tab into the refuge
-                if (!tabRefuge && rightTabs.length > 0 && cx(x) <= overlap) {
+                if (rightTabs.length > 0 && cx(x) <= overlap) {
                     debug();
-                    setTabRefuge(true);
                     setTabOffset(t => t - 1);
-                }
-                // When only a tabs-width of the refuge pane is showing, convert to left-tab
-                if (tabRefuge && cx(x) <= -(maxPaneWidth - tabWidth)) {
-                    debug();
-                    setTabRefuge(false);
                 }
             }
 
@@ -274,7 +260,6 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         Min: ${minBound}
                         Max: ${maxBound}
                         Overlap: ${overlap}
-                        Refuge: ${tabRefuge}
                         Bounds: ${viewportBounds.width}
                         Track: ${trackPanes.length}
                         Tabs: ${leftTabs.length} ${rightTabs.length}
