@@ -17,7 +17,8 @@ import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipS
 import { animated, useSpring } from "@react-spring/web";
 import { useMeasure } from "@uidotdev/usehooks";
 import { useWheel } from "@use-gesture/react";
-import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState, createRef, useMemo } from "react";
+import { useOverlap } from "@/useOverlap";
 
 const DEBUG = true;
 
@@ -47,6 +48,14 @@ export interface SlipStackHandle {
 export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
     function SlipStackContainer({paneData, paneWidth}: Props, ref): ReactNode {
         const [panes, setPanes] = useState<SlipStackPaneData[]>(paneData);
+
+        // Refs for each pane so we can detect overlap
+        const paneRefs = useMemo(
+            () => panes.map(() => createRef<HTMLDivElement>()),
+            [panes],
+        );
+
+        const overlaps = useOverlap(paneRefs);
 
         // This provides updates when the pane array is updated.
         useEffect(() => {
@@ -113,8 +122,14 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             threshold: 0,
         });
 
-        const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
-            <SlipStackPane key={p.id} width={maxPaneWidth} style={extraStyle}>
+        const renderPane = (p: SlipStackPaneData, i: number, extraStyle?: CSSProperties) => (
+            <SlipStackPane
+                key={p.id}
+                ref={paneRefs[i]}
+                width={maxPaneWidth}
+                isOverlapping={overlaps[i]?.some(Boolean)}
+                style={extraStyle}
+            >
                 {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
             </SlipStackPane>
         );
@@ -141,7 +156,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         marginLeft: styles.x.to(x => x),
                     }}
                 >
-                    {panes.map((p, index) => renderPane(p, {
+                    {panes.map((p, index) => renderPane(p, index, {
                         position: "sticky",
                         left: index * tabWidth,
                         right: (panes.length - index) * tabWidth - maxPaneWidth,
