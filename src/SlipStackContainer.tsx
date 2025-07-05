@@ -107,18 +107,18 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const [pinnedPane, ...trackPanes] = panes.slice(leftTabCount, panes.length - rightTabCount);
         const rightTabs = panes.slice(panes.length - rightTabCount);
 
-        // How far to the right the track should be pushed to accommodate the tabs and pinned pane
-        const trackOffset = leftTabs.length * tabWidth + maxPaneWidth;
-
         // Overlap is the viewport width subtracting the visible track width and tab width
         const overlap = Math.min(0,
-            Math.floor(viewportBounds.width) -
-            (leftTabCount + rightTabCount) * tabWidth -
-            (panes.length - leftTabCount - rightTabCount) * maxPaneWidth);
+            Math.floor(viewportBounds.width -
+                ((leftTabs.length + rightTabs.length) * tabWidth) -
+                ((panes.length - leftTabs.length - rightTabs.length - (tabRefuge ? 1 : 0)) * maxPaneWidth))
+        );
+
+        const trackOffset = (leftTabs.length * tabWidth) + maxPaneWidth + (tabRefuge ? -(maxPaneWidth) : 0);
 
         // Boundaries for the track
         const minBound = tabRefuge ? -(maxPaneWidth - tabWidth) : overlap;
-        const maxBound = tabRefuge ? overlap : 0;
+        const maxBound = tabRefuge ? overlap - tabWidth : 0;
 
         // Configure spring animation starting at zero position
         // styles contains the animated values and api provides methods to control the animation
@@ -127,7 +127,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         useEffect(() => {
             console.log("overlap", overlap);
             api.start({x: overlap, immediate: false});
-        }, [panes, api]);
+        }, [panes, api, viewportBounds.width]);
 
         /**
          *  The wheel handler is set to the viewport to enable capturing events over the entire component.
@@ -153,11 +153,10 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
          *  To push a tab from the refuge to the left, "X" needs to meet or exceed the overlap
          *  (sliding over the pinned pane).
          */
-        const bind = useWheel(({active, offset: [x], direction: [dx]}) => {
+        const bind = useWheel(({offset: [x], direction: [dx]}) => {
             const cx = (x: number) => {
                 // this normalizes "x" based on the negative left
-                const adjustedX = overlap - x;
-                return Math.max(minBound, Math.min(maxBound, adjustedX));
+                return overlap - x;
             };
 
             const debug = () => {
@@ -170,42 +169,35 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 if (!tabRefuge && leftTabCount > 0 && cx(x) >= 0) {
                     debug();
                     setTabRefuge(true);
-                    // api.start({x: cx(-maxPaneWidth), immediate: true});
-                    return;
                 }
                 // When the rightmost pane would be hidden, convert it to a right-tab.
                 if (tabRefuge && cx(x) >= overlap) {
                     debug();
                     setTabRefuge(false);
                     setTabOffset(t => t + 1);
-                    // api.start({x: cx(x), immediate: true});
-                    return;
                 }
             }
 
             // When scrolling to the left (revealing panes on the right)
             if (dx > 0) {
                 // When only rightmost pane is fully showing, pull the next tab into the refuge
-                if (!tabRefuge && rightTabCount > 0 && cx(x) <= overlap) {
+                if (!tabRefuge && rightTabs.length > 0 && cx(x) <= overlap) {
                     debug();
                     setTabRefuge(true);
                     setTabOffset(t => t - 1);
-                    // api.start({x: cx(overlap), immediate: true});
-                    return;
                 }
                 // When only a tabs-width of the refuge pane is showing, convert to left-tab
                 if (tabRefuge && cx(x) <= -(maxPaneWidth - tabWidth)) {
                     debug();
                     setTabRefuge(false);
-                    // api.start({x: cx(maxPaneWidth), immediate: true});
-                    return;
                 }
             }
 
             // Otherwise, update position of track
-            api.start({x: cx(x), immediate: active});
+            api.start({x: cx(x), immediate: true});
         }, {
             axis: "x",
+            bounds: {left: minBound, right: maxBound},
             preventDefault: true,
             threshold: 0,
         });
@@ -231,7 +223,6 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     width: "100%",
                     height: "100%",
                     overflow: "hidden",
-                    overscrollBehaviorX: "contain"
                 }}
             >
                 <div
@@ -257,7 +248,8 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         display: "flex",
                         flexDirection: "row",
                         height: "100%",
-                        left: styles.x.to(x => trackOffset + x),
+                        left: trackOffset,
+                        marginLeft: styles.x.to(x => x),
                         borderLeft: styles.x.to(x => (x !== 0 ? "1px solid rgba(0,0,0,0.05)" : "none")),
                         boxShadow: styles.x.to(x => (x !== 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none")),
                     }}
@@ -279,11 +271,13 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 {DEBUG && (<animated.div style={{position: "absolute", bottom: 0}}>
                     {styles.x.to(x => `
                         x: ${(x).toFixed(0)}
-                        Min: ${overlap}
+                        Min: ${minBound}
                         Max: ${maxBound}
                         Overlap: ${overlap}
                         Refuge: ${tabRefuge}
                         Bounds: ${viewportBounds.width}
+                        Track: ${trackPanes.length}
+                        Tabs: ${leftTabs.length} ${rightTabs.length}
                     `)}
                 </animated.div>)}
             </div>
