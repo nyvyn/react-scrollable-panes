@@ -46,11 +46,15 @@ type Props = PropsWithChildren<{
 }>;
 
 export const SlipStackPane = forwardRef<HTMLDivElement, Props>(
-    ({ width, style, children }, ref) => (
+    ({width, style, children}, ref) => (
         <div
             ref={ref}
             data-testid="pane"
-            style={{ ...basePaneStyle, width, ...style }}
+            style={{
+                ...basePaneStyle,
+                width,
+                ...style
+            }}
         >
             {children}
         </div>
