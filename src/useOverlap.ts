@@ -2,12 +2,23 @@ import { useLayoutEffect, useState, RefObject } from "react";
 
 export type Rect = { left: number; top: number; right: number; bottom: number };
 
+/**
+ * Determines if two rectangles overlap.
+ *
+ * @param {Rect} a - The first rectangle, defined by its boundaries (left, right, top, bottom).
+ * @param {Rect} b - The second rectangle, defined by its boundaries (left, right, top, bottom).
+ * @return {boolean} True if the rectangles overlap, otherwise false.
+ */
 export function isOverlapping(a: Rect, b: Rect): boolean {
   return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 }
 
-/*
+/**
+ * Compares two 2D boolean arrays for equality, checking if they have the same dimensions and values.
  *
+ * @param {boolean[][]} a - The first 2D boolean array to compare
+ * @param {boolean[][]} b - The second 2D boolean array to compare
+ * @return {boolean} True if arrays are equal in both dimensions and values, false otherwise
  */
 function equal(a: boolean[][], b: boolean[][]): boolean {
   if (a.length !== b.length) return false;

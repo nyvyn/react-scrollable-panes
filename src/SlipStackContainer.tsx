@@ -101,6 +101,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         // When panes are updated, move them to overlap.
         useEffect(() => {
+            console.log("overlap", overlap);
             api.start({x: overlap, immediate: false});
         }, [panes, api, overlap]);
 
