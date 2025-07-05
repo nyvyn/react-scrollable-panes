@@ -40,7 +40,7 @@ function equal(a: boolean[][], b: boolean[][]): boolean {
 export function useOverlap(refs: RefObject<HTMLDivElement | null>[]): [boolean[][], () => void] {
   const overlaps = useRef<boolean[][]>([]);
   const [tick, setTick] = useState(0);
-  const update = useCallback(() => setTick(t => t + 1), []);
+  const updateOverlaps = useCallback(() => setTick(t => t + 1), []);
 
   useLayoutEffect(() => {
     const rects = refs.map((r) => r.current?.getBoundingClientRect());
@@ -56,5 +56,5 @@ export function useOverlap(refs: RefObject<HTMLDivElement | null>[]): [boolean[]
     overlaps.current = equal(overlaps.current, result) ? overlaps.current : result;
   }, [refs, tick]);
 
-  return [overlaps.current, update];
+  return [overlaps.current, updateOverlaps];
 }

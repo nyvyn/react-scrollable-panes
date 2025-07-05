@@ -14,11 +14,11 @@
  *  with the rightmost pane in the track converted to a right-aligned vertical tab.
  */
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
-import { animated, useSpring } from "@react-spring/web";
 import { useMeasure } from "@/useMeasure";
-import { useWheel } from "@use-gesture/react";
-import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState, createRef, useMemo } from "react";
 import { useOverlap } from "@/useOverlap";
+import { animated, useSpring } from "@react-spring/web";
+import { useWheel } from "@use-gesture/react";
+import { createRef, CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 
 const DEBUG = true;
 
@@ -49,18 +49,17 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
     function SlipStackContainer({paneData, paneWidth}: Props, ref): ReactNode {
         const [panes, setPanes] = useState<SlipStackPaneData[]>(paneData);
 
-        // Refs for each pane so we can detect overlap
-        const paneRefs = useMemo(
-            () => panes.map(() => createRef<HTMLDivElement>()),
-            [panes],
-        );
-
-        const overlaps = useOverlap(paneRefs);
-
         // This provides updates when the pane array is updated.
         useEffect(() => {
             setPanes(paneData);
         }, [paneData]);
+
+        // Refs for each pane so we can detect overlap
+        const paneRefs = useMemo(() => {
+            return panes.map(() => createRef<HTMLDivElement>());
+        }, [panes]);
+
+        const [overlaps] = useOverlap(paneRefs);
 
         /**
          *  Passed to every pane renderer so it can request navigation.
@@ -101,13 +100,12 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         // When panes are updated, move them to overlap.
         useEffect(() => {
-            console.log("overlap", overlap);
-            api.start({x: overlap, immediate: false});
+            api.start({
+                x: overlap,
+                immediate: false,
+            });
         }, [panes, api, overlap]);
 
-        /**
-         *  The wheel handler is set to the viewport to enable capturing events over the entire component.
-         */
         const bind = useWheel(({offset: [x]}) => {
             const cx = (x: number) => {
                 // this normalizes "x" based on the negative left
