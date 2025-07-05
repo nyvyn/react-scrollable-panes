@@ -15,7 +15,7 @@
  */
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
 import { animated, useSpring } from "@react-spring/web";
-import useMeasure from "@/useMeasure";
+import { useMeasure } from "@/useMeasure";
 import { useWheel } from "@use-gesture/react";
 import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState, createRef, useMemo } from "react";
 import { useOverlap } from "@/useOverlap";
