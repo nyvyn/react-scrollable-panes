@@ -43,16 +43,19 @@ const basePaneStyle: CSSProperties = {
 type Props = PropsWithChildren<{
     width: number;
     style?: CSSProperties;
+    /** When true, indicates this pane overlaps another */
+    isOverlapping?: boolean;
 }>;
 
 export const SlipStackPane = forwardRef<HTMLDivElement, Props>(
-    ({width, style, children}, ref) => (
+    ({width, style, isOverlapping, children}, ref) => (
         <div
             ref={ref}
             data-testid="pane"
             style={{
                 ...basePaneStyle,
                 width,
+                ...(isOverlapping ? { border: "2px solid red" } : {}),
                 ...style
             }}
         >

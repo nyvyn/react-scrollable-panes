@@ -14,10 +14,11 @@
  *  with the rightmost pane in the track converted to a right-aligned vertical tab.
  */
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
+import { useMeasure } from "@/useMeasure";
+import { useOverlap } from "@/useOverlap";
 import { animated, useSpring } from "@react-spring/web";
-import { useMeasure } from "@uidotdev/usehooks";
 import { useWheel } from "@use-gesture/react";
-import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { createRef, CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 
 const DEBUG = true;
 
@@ -52,6 +53,13 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         useEffect(() => {
             setPanes(paneData);
         }, [paneData]);
+
+        // Refs for each pane so we can detect overlap
+        const paneRefs = useMemo(() => {
+            return panes.map(() => createRef<HTMLDivElement>());
+        }, [panes]);
+
+        const [overlaps] = useOverlap(paneRefs);
 
         /**
          *  Passed to every pane renderer so it can request navigation.
@@ -92,12 +100,12 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         // When panes are updated, move them to overlap.
         useEffect(() => {
-            api.start({x: overlap, immediate: false});
+            api.start({
+                x: overlap,
+                immediate: false,
+            });
         }, [panes, api, overlap]);
 
-        /**
-         *  The wheel handler is set to the viewport to enable capturing events over the entire component.
-         */
         const bind = useWheel(({offset: [x]}) => {
             const cx = (x: number) => {
                 // this normalizes "x" based on the negative left
@@ -113,8 +121,14 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             threshold: 0,
         });
 
-        const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
-            <SlipStackPane key={p.id} width={maxPaneWidth} style={extraStyle}>
+        const renderPane = (p: SlipStackPaneData, i: number, extraStyle?: CSSProperties) => (
+            <SlipStackPane
+                key={p.id}
+                ref={paneRefs[i]}
+                width={maxPaneWidth}
+                isOverlapping={overlaps[i]?.some(Boolean)}
+                style={extraStyle}
+            >
                 {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
             </SlipStackPane>
         );
@@ -141,7 +155,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         marginLeft: styles.x.to(x => x),
                     }}
                 >
-                    {panes.map((p, index) => renderPane(p, {
+                    {panes.map((p, index) => renderPane(p, index, {
                         position: "sticky",
                         left: index * tabWidth,
                         right: (panes.length - index) * tabWidth - maxPaneWidth,

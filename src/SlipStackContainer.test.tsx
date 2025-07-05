@@ -3,15 +3,6 @@ import { SlipStackContainer } from "@/SlipStackContainer";
 import { render, screen } from "@testing-library/react";
 import { act, createRef } from "react";
 
-vi.mock("@uidotdev/usehooks", async (importOriginal) => {
-    const original = await importOriginal<typeof import("@uidotdev/usehooks")>();
-    return {
-        ...original,
-        useMeasure: () => [() => {}, { width: 800, height: 600 }],
-    };
-});
-
-
 it("appends a new pane and recalculates pane widths", async () => {
     const width = 400;
     const ref = createRef<SlipStackHandle>();
