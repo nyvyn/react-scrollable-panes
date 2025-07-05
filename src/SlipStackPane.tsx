@@ -43,13 +43,20 @@ const basePaneStyle: CSSProperties = {
 type Props = PropsWithChildren<{
     width: number;
     style?: CSSProperties;
+    /**
+     * When provided, indicates that this pane is rendered as a tab.
+     * "left" means it is overlapped by panes to the right,
+     * "right" means it is partially off screen on the right.
+     */
+    tabSide?: "left" | "right";
 }>;
 
 export const SlipStackPane = forwardRef<HTMLDivElement, Props>(
-    ({width, style, children}, ref) => (
+    ({width, style, tabSide, children}, ref) => (
         <div
             ref={ref}
             data-testid="pane"
+            data-tab-side={tabSide ?? ""}
             style={{
                 ...basePaneStyle,
                 width,

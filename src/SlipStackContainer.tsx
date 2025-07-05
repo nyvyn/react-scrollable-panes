@@ -89,10 +89,12 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         // The first render, panes is empty, so no positioning is applied
         const [styles, api] = useSpring(() => ({x: 0}));
+        const [currentX, setCurrentX] = useState(0);
 
         // When panes are updated, move them to overlap.
         useEffect(() => {
             api.start({x: overlap, immediate: false});
+            setCurrentX(overlap);
         }, [panes, api, overlap]);
 
         /**
@@ -105,7 +107,9 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             };
 
             // Otherwise, update position of track
-            api.start({x: cx(x), immediate: true});
+            const nx = cx(x);
+            api.start({x: nx, immediate: true});
+            setCurrentX(nx);
         }, {
             axis: "x",
             bounds: {left: minBound, right: maxBound},
@@ -113,8 +117,18 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             threshold: 0,
         });
 
-        const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties) => (
-            <SlipStackPane key={p.id} width={maxPaneWidth} style={extraStyle}>
+        const tabSize = maxPaneWidth - tabWidth;
+        const leftTabCount = Math.min(
+            panes.length,
+            Math.max(0, Math.floor(Math.abs(currentX) / tabSize)),
+        );
+        const rightTabCount = Math.min(
+            panes.length - leftTabCount,
+            Math.max(0, Math.floor((currentX - overlap) / tabSize)),
+        );
+
+        const renderPane = (p: SlipStackPaneData, extraStyle?: CSSProperties, tabSide?: "left" | "right") => (
+            <SlipStackPane key={p.id} width={maxPaneWidth} style={extraStyle} tabSide={tabSide}>
                 {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
             </SlipStackPane>
         );
@@ -141,11 +155,18 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         marginLeft: styles.x.to(x => x),
                     }}
                 >
-                    {panes.map((p, index) => renderPane(p, {
-                        position: "sticky",
-                        left: index * tabWidth,
-                        right: (panes.length - index) * tabWidth - maxPaneWidth,
-                    }))}
+                    {panes.map((p, index) => {
+                        const tabSide = index < leftTabCount
+                            ? "left"
+                            : index >= panes.length - rightTabCount
+                                ? "right"
+                                : undefined;
+                        return renderPane(p, {
+                            position: "sticky",
+                            left: index * tabWidth,
+                            right: (panes.length - index) * tabWidth - maxPaneWidth,
+                        }, tabSide as "left" | "right" | undefined);
+                    })}
                 </animated.div>
 
                 {DEBUG && (<animated.div style={{position: "absolute", bottom: 0}}>

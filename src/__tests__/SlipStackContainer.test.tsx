@@ -1,6 +1,6 @@
 import type { SlipStackHandle } from "@/SlipStackContainer";
 import { SlipStackContainer } from "@/SlipStackContainer";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { act, createRef } from "react";
 
 vi.mock("@uidotdev/usehooks", async (importOriginal) => {
@@ -76,4 +76,32 @@ it("creates vertical tabs when panes exceed available width", async () => {
     });
 
     expect(screen.getAllByTestId("pane")).toHaveLength(4);
+});
+
+it("flags panes as left or right tabs when only 40px is visible", async () => {
+    const width = 300;
+    const ref = createRef<SlipStackHandle>();
+    const paneA = {id: "A", title: "A", element: <span>A</span>};
+    const paneB = {id: "B", title: "B", element: <span>B</span>};
+    const paneC = {id: "C", title: "C", element: <span>C</span>};
+    const paneD = {id: "D", title: "D", element: <span>D</span>};
+
+    render(<SlipStackContainer ref={ref} paneData={[paneA]} paneWidth={width}/>);
+
+    act(() => { ref.current!.openPane(paneB); });
+    act(() => { ref.current!.openPane(paneC); });
+    act(() => { ref.current!.openPane(paneD); });
+
+    let panes = screen.getAllByTestId("pane");
+    expect(panes[0]).toHaveAttribute("data-tab-side", "left");
+    expect(panes[3]).toHaveAttribute("data-tab-side", "");
+
+    // scroll track to the far right to expose a right tab
+    const viewport = screen.getByTestId("viewport");
+    act(() => {
+        fireEvent.wheel(viewport, {deltaX: -400});
+    });
+
+    panes = screen.getAllByTestId("pane");
+    expect(panes[3]).toHaveAttribute("data-tab-side", "right");
 });
