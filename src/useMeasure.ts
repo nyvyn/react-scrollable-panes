@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useRef, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export type MeasureBounds = {
     width: number;
@@ -18,8 +18,11 @@ export type MeasureBounds = {
  * @return {[RefObject<T>, MeasureBounds]} A tuple containing a React reference object for the element and
  * its current measured bounding box values.
  */
-export default function useMeasure<T extends HTMLElement>(): [RefObject<T>, MeasureBounds] {
-    const ref = useRef<T>(null);
+export default function useMeasure<T extends HTMLElement>(): [(instance: T | null) => void, MeasureBounds] {
+    const [node, setNode] = useState<T | null>(null);
+    const ref = useCallback((node: T | null) => {
+        setNode(node);
+    }, []);
     const [bounds, setBounds] = useState<MeasureBounds>({
         width: 0,
         height: 0,
@@ -30,8 +33,8 @@ export default function useMeasure<T extends HTMLElement>(): [RefObject<T>, Meas
     });
 
     useEffect(() => {
-        if (!ref.current) return;
-        const element = ref.current;
+        if (!node) return;
+        const element = node;
         const update = () => {
             const rect = element.getBoundingClientRect();
             setBounds({
@@ -47,7 +50,7 @@ export default function useMeasure<T extends HTMLElement>(): [RefObject<T>, Meas
         resizeObserver.observe(element);
         update();
         return () => resizeObserver.disconnect();
-    }, [ref]);
+    }, [node]);
 
     return [ref, bounds];
 }
