@@ -121,13 +121,14 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             threshold: 0,
         });
 
-        const renderPane = (p: SlipStackPaneData, i: number, extraStyle?: CSSProperties) => (
+        const renderPane = (p: SlipStackPaneData, i: number, style?: CSSProperties) => (
             <SlipStackPane
                 key={p.id}
                 ref={paneRefs[i]}
+                id={p.id}
                 width={maxPaneWidth}
-                isOverlapping={overlaps[i]?.some(Boolean)}
-                style={extraStyle}
+                style={style}
+                title={p.title}
             >
                 {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
             </SlipStackPane>
@@ -136,9 +137,10 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         return (
             <div
                 {...bind()}
-                id="slipstack-viewport"
                 ref={viewportRef}
-                data-testid="viewport"
+                id="slipstack-viewport"
+                data-testid="slipstack-viewport"
+                className="slipstack-viewport"
                 style={{
                     position: "relative",
                     width: "100%",
@@ -147,7 +149,9 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                 }}
             >
                 <animated.div
-                    key={"slipstack-track"}
+                    id="slipstack-track"
+                    data-testid="slipstack-track"
+                    className="slipstack-track"
                     style={{
                         display: "flex",
                         flexDirection: "row",
