@@ -145,8 +145,6 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         position: "sticky",
                         left: index * tabWidth,
                         right: (panes.length - index) * tabWidth - maxPaneWidth,
-                        borderLeft: "1px solid rgba(0,0,0,0.05)",
-                        boxShadow: index > 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none",
                     }))}
                 </animated.div>
 
