@@ -16,9 +16,9 @@
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
 import { SlipStackTab } from "@/SlipStackTab";
 import { animated, useSpring } from "@react-spring/web";
+import { useMeasure } from "@uidotdev/usehooks";
 import { useWheel } from "@use-gesture/react";
 import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
-import useMeasure from "react-use-measure";
 
 const DEBUG = true;
 
@@ -76,12 +76,13 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         // Width of viewport
         const [viewportRef, viewportBounds] = useMeasure();
+        const viewportWidth = viewportBounds.width ?? 0;
 
         // Width of a single pane, capped at the larger of container width or passed value
-        const maxPaneWidth = Math.min(paneWidth, viewportBounds.width);
+        const maxPaneWidth = Math.min(paneWidth, viewportWidth);
 
         // Overlap is the viewport width subtracting the visible track width and tab width
-        const overlap = Math.min(0, Math.floor(viewportBounds.width - panes.length * maxPaneWidth));
+        const overlap = Math.min(0, Math.floor(viewportWidth - panes.length * maxPaneWidth));
 
         // Boundaries for the track
         const minBound = overlap;
@@ -140,10 +141,6 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
             </SlipStackPane>
         );
 
-        const renderTab = (p: SlipStackPaneData, side: "left" | "right", extraStyle?: CSSProperties) => (
-            <SlipStackTab key={p.id} title={p.title} width={tabWidth} side={side} style={extraStyle}/>
-        );
-
         return (
             <div
                 {...bind()}
@@ -171,9 +168,8 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         left: index * tabWidth,
                         right: (panes.length - index) * tabWidth - maxPaneWidth,
                         borderLeft: "1px solid rgba(0,0,0,0.05)",
-                        boxShadow: "-6px 0 15px -3px rgba(0,0,0,0.05)",
+                        boxShadow: index > 0 && overlap < 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none",
                     }))}
-
                 </animated.div>
 
                 {DEBUG && (<animated.div style={{position: "absolute", bottom: 0}}>
