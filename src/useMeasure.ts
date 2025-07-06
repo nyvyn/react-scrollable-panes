@@ -30,7 +30,7 @@ export function useMeasure<T extends HTMLDivElement>(): [RefObject<T | null>, Me
         return () => {
             observer.disconnect();
         };
-    }, [ref.current]);
+    }, []);
 
     return [ref, bounds];
 }

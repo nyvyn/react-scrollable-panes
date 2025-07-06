@@ -15,14 +15,8 @@
  */
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
 import { useMeasure } from "@/useMeasure";
-import { useOverlap } from "@/useOverlap";
-import { animated, useSpring } from "@react-spring/web";
-import { useWheel } from "@use-gesture/react";
-import { createRef, CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
-
-const DEBUG = true;
-
-const tabWidth = 40;
+import { animated } from "@react-spring/web";
+import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
 
 /**
  * Props for the SlipStackContainer component
@@ -30,8 +24,10 @@ const tabWidth = 40;
 interface Props {
     /** Set of panes to layout in the container (a mix of tabs and panes based on widths) */
     paneData: SlipStackPaneData[];
-    /** Maximum width in pixels for each individual pane */
-    paneWidth: number;
+    /** Maximum width in pixels for each pane */
+    paneWidth?: number;
+    /** Maximum width in pixels for each tab */
+    tabWidth?: number;
 }
 
 /**
@@ -46,20 +42,13 @@ export interface SlipStackHandle {
 }
 
 export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
-    function SlipStackContainer({paneData, paneWidth}: Props, ref): ReactNode {
+    function SlipStackContainer({paneData, paneWidth = 500, tabWidth = 40}: Props, ref): ReactNode {
         const [panes, setPanes] = useState<SlipStackPaneData[]>(paneData);
 
         // This provides updates when the pane array is updated.
         useEffect(() => {
             setPanes(paneData);
         }, [paneData]);
-
-        // Refs for each pane so we can detect overlap
-        const paneRefs = useMemo(() => {
-            return panes.map(() => createRef<HTMLDivElement>());
-        }, [panes]);
-
-        const [overlaps] = useOverlap(paneRefs);
 
         /**
          *  Passed to every pane renderer so it can request navigation.
@@ -89,42 +78,11 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const maxPaneWidth = Math.min(paneWidth, viewportWidth);
 
         // Overlap is the viewport width subtracting the visible track width and tab width
-        const overlap = Math.min(0, Math.floor(viewportWidth - panes.length * maxPaneWidth));
+        // const overlap = Math.min(0, Math.floor(viewportWidth - panes.length * maxPaneWidth));
 
-        // Boundaries for the track
-        const minBound = overlap;
-        const maxBound = 0;
-
-        // The first render, panes is empty, so no positioning is applied
-        const [styles, api] = useSpring(() => ({x: 0}));
-
-        // When panes are updated, move them to overlap.
-        useEffect(() => {
-            api.start({
-                x: overlap,
-                immediate: false,
-            });
-        }, [panes, api, overlap]);
-
-        const bind = useWheel(({offset: [x]}) => {
-            const cx = (x: number) => {
-                // this normalizes "x" based on the negative left
-                return overlap - x;
-            };
-
-            // Otherwise, update position of track
-            api.start({x: cx(x), immediate: true});
-        }, {
-            axis: "x",
-            bounds: {left: minBound, right: maxBound},
-            preventDefault: true,
-            threshold: 0,
-        });
-
-        const renderPane = (p: SlipStackPaneData, i: number, style?: CSSProperties) => (
+        const renderPane = (p: SlipStackPaneData, style?: CSSProperties) => (
             <SlipStackPane
                 key={p.id}
-                ref={paneRefs[i]}
                 id={p.id}
                 width={maxPaneWidth}
                 style={style}
@@ -136,16 +94,20 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
 
         return (
             <div
-                {...bind()}
                 ref={viewportRef}
                 id="slipstack-viewport"
                 data-testid="slipstack-viewport"
                 className="slipstack-viewport"
                 style={{
                     position: "relative",
+                    display: "flex",
+                    flexGrow: 1,
                     width: "100%",
                     height: "100%",
-                    overflow: "hidden",
+                    overflowX: "auto",
+                    overflowY: "hidden",
+                    overscrollBehavior: "contain",
+                    touchAction: "pan-y",
                 }}
             >
                 <animated.div
@@ -153,29 +115,17 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     data-testid="slipstack-track"
                     className="slipstack-track"
                     style={{
+                        width: panes.length * maxPaneWidth,
                         display: "flex",
-                        flexDirection: "row",
-                        height: "100%",
-                        marginLeft: styles.x.to(x => x),
+                        flexGrow: 1,
                     }}
                 >
-                    {panes.map((p, index) => renderPane(p, index, {
+                    {panes.map((p, index) => renderPane(p, {
                         position: "sticky",
                         left: index * tabWidth,
-                        right: (panes.length - index) * tabWidth - maxPaneWidth,
+                        right: -(maxPaneWidth - ((panes.length - index) * tabWidth)),
                     }))}
                 </animated.div>
-
-                {DEBUG && (<animated.div style={{position: "absolute", bottom: 0}}>
-                    {styles.x.to(x => `
-                        x: ${(x).toFixed(0)}
-                        Min: ${minBound}
-                        Max: ${maxBound}
-                        Overlap: ${overlap}
-                        Bounds: ${viewportWidth}
-                        Panes: ${panes.length}
-                    `)}
-                </animated.div>)}
             </div>
         );
     });
