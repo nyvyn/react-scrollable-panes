@@ -14,10 +14,11 @@
  *  with the rightmost pane in the track converted to a right-aligned vertical tab.
  */
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
+import { SlipStackTab } from "@/SlipStackTab";
 import { useMeasure } from "@/useMeasure";
 import { animated } from "@react-spring/web";
 import { useScroll } from "@use-gesture/react";
-import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 /**
  * Props for the SlipStackContainer component
@@ -82,43 +83,37 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const overlap = Math.min(0, Math.floor(viewportWidth - panes.length * maxPaneWidth));
 
         // Scroll position of the viewport
-        const [scrollX, setScrollX] = useState(0);
-        useScroll(({ scroll: [x] }) => setScrollX(x), { target: viewportRef });
+        const scrollX = useRef(0);
+        useScroll(({movement: [x]}) => scrollX.current = x, {target: viewportRef});
 
         // Whenever panes or overlap change, scroll to keep the rightmost pane visible
         useEffect(() => {
             if (!viewportRef.current) return;
-            viewportRef.current.scrollLeft = -overlap;
+            viewportRef.current.scrollLeft = overlap;
         }, [overlap, panes, viewportRef]);
 
-        const renderPane = (p: SlipStackPaneData, index: number, style?: CSSProperties) => (
-            <SlipStackPane
-                key={p.id}
-                id={p.id}
-                width={maxPaneWidth}
-                style={{...style, position: "relative"}}
-                title={p.title}
+        const renderPane = (p: SlipStackPaneData, index: number, styles?: CSSProperties) => (
+            <div style={{
+                ...styles,
+                borderLeft: index > 0 ? "1px solid rgba(0,0,0,0.05)": "none",
+                boxShadow: index > 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none",
+            }}
             >
-                <div
-                    style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        height: "100%",
-                        width: tabWidth,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        writingMode: "vertical-rl",
-                        opacity: scrollX > index * maxPaneWidth ? 1 : 0,
-                        transition: "opacity 0.2s",
-                        pointerEvents: "none",
-                    }}
+                <SlipStackPane
+                    key={p.id}
+                    id={p.id}
+                    width={maxPaneWidth}
                 >
-                    {p.title}
-                </div>
-                {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
-            </SlipStackPane>
+                    {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
+                </SlipStackPane>
+                <SlipStackTab
+                    title={p.title}
+                    width={tabWidth}
+                    style={{
+                        opacity: scrollX.current <= index * tabWidth ? 1 : 0,
+                    }}
+                />
+            </div>
         );
 
         return (

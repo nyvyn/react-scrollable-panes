@@ -1,7 +1,9 @@
 import { CSSProperties, forwardRef } from "react";
 
 const baseTabStyle: CSSProperties = {
-    backgroundColor: "white",
+    position: "absolute",
+    top: 0,
+    left: 0,
     height: "100%",
     display: "flex",
     alignItems: "center",
