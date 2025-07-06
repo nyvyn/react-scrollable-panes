@@ -10,7 +10,7 @@ it("appends a new pane and recalculates pane widths", async () => {
     render(<SlipStackContainer ref={ref} paneData={[paneA]} paneWidth={width}/>);
 
     // → initially exactly one .pane with full width (= 800 px from mock)
-    let panes = screen.getAllByTestId("pane");
+    let panes = screen.getAllByTestId("slipstack-pane");
     expect(panes).toHaveLength(1);
 
     // 2️⃣  open B imperatively
@@ -19,7 +19,7 @@ it("appends a new pane and recalculates pane widths", async () => {
     });
 
     // → now two panes, both 400 px wide (800 px / 2)
-    panes = screen.getAllByTestId("pane");
+    panes = screen.getAllByTestId("slipstack-pane");
     expect(panes).toHaveLength(2);
 
     // and the new pane’s content is rendered
@@ -42,7 +42,7 @@ it("slides panes over the first when width is limited", async () => {
         ref.current!.openPane(paneC);
     });
 
-    const panes = screen.getAllByTestId("pane");
+    const panes = screen.getAllByTestId("slipstack-pane");
     expect(panes).toHaveLength(3);
 });
 
@@ -66,5 +66,5 @@ it("creates vertical tabs when panes exceed available width", async () => {
         ref.current!.openPane(paneD);
     });
 
-    expect(screen.getAllByTestId("pane")).toHaveLength(4);
+    expect(screen.getAllByTestId("slipstack-pane")).toHaveLength(4);
 });
