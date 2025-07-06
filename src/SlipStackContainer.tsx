@@ -16,9 +16,7 @@
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
 import { SlipStackTab } from "@/SlipStackTab";
 import { useMeasure } from "@/useMeasure";
-import { animated } from "@react-spring/web";
-import { useScroll } from "@use-gesture/react";
-import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
 
 /**
  * Props for the SlipStackContainer component
@@ -79,42 +77,76 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         // Width of a single pane, capped at the larger of container width or passed value
         const maxPaneWidth = Math.min(paneWidth, viewportWidth);
 
-        // Overlap is the viewport width subtracting the visible track width and tab width
-        const overlap = Math.min(0, Math.floor(viewportWidth - panes.length * maxPaneWidth));
+        // Overlap is the extent that all panes together exceed the viewport width.
+        const overlap = Math.max(0, Math.floor(viewportWidth - panes.length * maxPaneWidth) * -1);
 
-        // Scroll position of the viewport
-        const scrollX = useRef(0);
-        useScroll(({movement: [x]}) => scrollX.current = x, {target: viewportRef});
-
-        // Whenever panes or overlap change, scroll to keep the rightmost pane visible
+        // Whenever overlap changes, scroll to keep the rightmost pane visible
         useEffect(() => {
             if (!viewportRef.current) return;
-            viewportRef.current.scrollLeft = overlap;
-        }, [overlap, panes, viewportRef]);
+            viewportRef.current.scrollTo({left: overlap});
+        }, [overlap, viewportRef]);
 
-        const renderPane = (p: SlipStackPaneData, index: number, styles?: CSSProperties) => (
-            <div style={{
-                ...styles,
-                borderLeft: index > 0 ? "1px solid rgba(0,0,0,0.05)": "none",
-                boxShadow: index > 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none",
-            }}
-            >
-                <SlipStackPane
+        const [scrollLeft, setScrollLeft] = useState(0);
+
+        useEffect(() => {
+            const handleScroll = () => {
+                setScrollLeft(viewportRef.current?.scrollLeft ?? 0);
+            };
+
+            // Add the event listener when the component mounts
+            viewportRef.current?.addEventListener("scroll", handleScroll);
+
+            // Clean up the event listener when the component unmounts
+            return () => {
+                viewportRef.current?.removeEventListener("scroll", handleScroll);
+            };
+        }, []);
+
+        // Display the pane with a tab positioned over it, opacity controls tab visibility.
+        const renderPane = (p: SlipStackPaneData, index: number, style?: CSSProperties) => {
+            /**
+             * The formula calculates the exact scroll position where the next pane () begins to slide over the current pane (),
+             * leaving only a portion of the current pane visible. If is greater than that position, we consider the current pane to be a 'left tab'.
+             * If the right edge of the viewport has scrolled past the pane, leaving less than of the pane's left side visible,
+             * then we consider this pane to be a 'right tab'."
+             */
+            const isLeftOccluded = scrollLeft > (index + 1) * (maxPaneWidth - tabWidth);
+            const isRightOccluded = (scrollLeft + viewportWidth) < (index * maxPaneWidth + tabWidth);
+            const isTab = isLeftOccluded || isRightOccluded;
+
+            return (
+                <div
                     key={p.id}
-                    id={p.id}
-                    width={maxPaneWidth}
-                >
-                    {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
-                </SlipStackPane>
-                <SlipStackTab
-                    title={p.title}
-                    width={tabWidth}
                     style={{
-                        opacity: scrollX.current <= index * tabWidth ? 1 : 0,
+                        ...style,
+                        borderLeft: index > 0 ? "1px solid rgba(0,0,0,0.05)" : "none",
+                        boxShadow: index > 0 ? "-6px 0 15px -3px rgba(0,0,0,0.05)" : "none",
                     }}
-                />
-            </div>
-        );
+                >
+                    <SlipStackPane
+                        id={p.id}
+                        width={maxPaneWidth}
+                        style={{
+                            position: "relative",
+                        }}
+                    >
+                        {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
+                    </SlipStackPane>
+                    <SlipStackTab
+                        title={p.title}
+                        width={tabWidth}
+                        side={isLeftOccluded ? "left" : isRightOccluded ? "right" : undefined}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            opacity: isTab ? 1 : 0,
+                            transition: "opacity 0.3s ease-in-out",
+                        }}
+                    />
+                </div>
+            );
+        };
 
         return (
             <div
@@ -131,10 +163,10 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                     overflowX: "auto",
                     overflowY: "hidden",
                     overscrollBehavior: "contain",
-                    touchAction: "pan-y",
+                    scrollBehavior: "smooth",
                 }}
             >
-                <animated.div
+                <div
                     id="slipstack-track"
                     data-testid="slipstack-track"
                     className="slipstack-track"
@@ -149,7 +181,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         left: index * tabWidth,
                         right: -(maxPaneWidth - ((panes.length - index) * tabWidth)),
                     }))}
-                </animated.div>
+                </div>
             </div>
         );
     });
