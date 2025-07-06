@@ -16,6 +16,7 @@
 import { SlipStackPane, SlipStackPaneData, SlipStackPaneRenderer } from "@/SlipStackPane";
 import { useMeasure } from "@/useMeasure";
 import { animated } from "@react-spring/web";
+import { useScroll } from "@use-gesture/react";
 import { CSSProperties, forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useState } from "react";
 
 /**
@@ -78,16 +79,44 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
         const maxPaneWidth = Math.min(paneWidth, viewportWidth);
 
         // Overlap is the viewport width subtracting the visible track width and tab width
-        // const overlap = Math.min(0, Math.floor(viewportWidth - panes.length * maxPaneWidth));
+        const overlap = Math.min(0, Math.floor(viewportWidth - panes.length * maxPaneWidth));
 
-        const renderPane = (p: SlipStackPaneData, style?: CSSProperties) => (
+        // Scroll position of the viewport
+        const [scrollX, setScrollX] = useState(0);
+        useScroll(({ scroll: [x] }) => setScrollX(x), { target: viewportRef });
+
+        // Whenever panes or overlap change, scroll to keep the rightmost pane visible
+        useEffect(() => {
+            if (!viewportRef.current) return;
+            viewportRef.current.scrollLeft = -overlap;
+        }, [overlap, panes, viewportRef]);
+
+        const renderPane = (p: SlipStackPaneData, index: number, style?: CSSProperties) => (
             <SlipStackPane
                 key={p.id}
                 id={p.id}
                 width={maxPaneWidth}
-                style={style}
+                style={{...style, position: "relative"}}
                 title={p.title}
             >
+                <div
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        height: "100%",
+                        width: tabWidth,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        writingMode: "vertical-rl",
+                        opacity: scrollX > index * maxPaneWidth ? 1 : 0,
+                        transition: "opacity 0.2s",
+                        pointerEvents: "none",
+                    }}
+                >
+                    {p.title}
+                </div>
                 {typeof p.element === "function" ? (p.element as SlipStackPaneRenderer)({openPane, closePane}) : p.element}
             </SlipStackPane>
         );
@@ -120,7 +149,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         flexGrow: 1,
                     }}
                 >
-                    {panes.map((p, index) => renderPane(p, {
+                    {panes.map((p, index) => renderPane(p, index, {
                         position: "sticky",
                         left: index * tabWidth,
                         right: -(maxPaneWidth - ((panes.length - index) * tabWidth)),
