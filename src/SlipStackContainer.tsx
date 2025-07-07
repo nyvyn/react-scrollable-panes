@@ -141,7 +141,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                             top: 0,
                             left: 0,
                             opacity: isTab ? 1 : 0,
-                            transition: "opacity 0.3s ease-in-out",
+                            transition: "opacity 150ms linear",
                         }}
                     />
                 </div>
@@ -176,7 +176,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         flexGrow: 1,
                     }}
                 >
-                    {panes.map((p, index) => renderPane(p, {
+                    {panes.map((p, index) => renderPane(p, index, {
                         position: "sticky",
                         left: index * tabWidth,
                         right: -(maxPaneWidth - ((panes.length - index) * tabWidth)),
