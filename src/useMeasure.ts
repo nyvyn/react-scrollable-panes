@@ -9,9 +9,6 @@ export type MeasureBounds = Pick<
  *  A React hook that provides a ref object for an HTML element and measures its bounding rectangle dimensions
  *  and position, including width, height properties. The measurements update
  *  automatically when the size or position of the element changes due to resizing or layout shifts.
- *
- *  @template T - The type of the HTML element being referenced.
- *  @return {[RefObject<T>, MeasureBounds]} A tuple containing the reference and bounding values.
  */
 export function useMeasure<T extends HTMLDivElement>(): [RefObject<T | null>, MeasureBounds] {
     const ref = useRef<T>(null);

@@ -7,7 +7,12 @@ const baseTabStyle: CSSProperties = {
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
+    fontSize: "1.1em",
+    letterSpacing: "0.03em",
+    fontWeight: 500,
     boxShadow: "0 0 15px 3px rgba(0,0,0,0.05)",
+    boxSizing: "content-box",
+
 };
 
 const leftTabStyle: CSSProperties = {
