@@ -32,6 +32,7 @@ const basePaneStyle: CSSProperties = {
     backgroundColor: "white",
     height: "100%",
     display: "flex",
+    padding: "2rem",
     flexDirection: "column",
     flexShrink: "0",
     flexGrow: "0",

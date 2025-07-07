@@ -49,13 +49,9 @@ export default function App() {
     background: "transparent",
     cursor: "pointer",
   };
-  const noteStyle: CSSProperties = {
-    padding: "16px",
-    height: "100%",
-  };
 
   const NotePane = ({ title, body }: { title: string; body: string }) => (
-    <div style={noteStyle}>
+    <div>
       <h2 style={{ margin: 0, marginBottom: 8, fontSize: 18 }}>{title}</h2>
       <div>{body}</div>
     </div>
