@@ -176,7 +176,7 @@ export const SlipStackContainer = forwardRef<SlipStackHandle, Props>(
                         flexGrow: 1,
                     }}
                 >
-                    {panes.map((p, index) => renderPane(p, index, {
+                    {panes.map((p, index) => renderPane(p, {
                         position: "sticky",
                         left: index * tabWidth,
                         right: -(maxPaneWidth - ((panes.length - index) * tabWidth)),
