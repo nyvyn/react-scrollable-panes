@@ -95,6 +95,7 @@ Returned when you attach `ref` to the container.
 | Method     | Description                                       |
 |------------|---------------------------------------------------|
 | `openPane` | `openPane(next: SlipStackPaneData): void` &nbsp;—&nbsp;programmatically open or navigate to *next*. |
+| `closePane` | `closePane(id: string): void` &nbsp;—&nbsp;programmatically close a specified pane by its identifier. |
 
 Calling `openPane(next)` appends *next* to the right of the calling pane and removes any panes that were further right.
 
@@ -105,9 +106,8 @@ Calling `openPane(next)` appends *next* to the right of the calling pane and rem
 • If the total width of visible panes exceeds the viewport, the container
   converts the left-most panes into 40 px vertical tabs and/or horizontally
   scrolls the sliding track to keep everything accessible.  
-• `openPane(next)` appends (or navigates to) *next*, recomputes the layout,
-  and scrolls the new pane into view. The same `openPane` reference is passed
-  to every `SlipStackPaneRenderer`.
+• `openPane(next)` appends (or navigates to) *next*, recomputes the layout, and scrolls the new pane into view.  
+• `closePane(id)` removes the pane with the specified `id` from the container and recomputes the layout.
 
 ## Contributing
 PRs and issues are welcome. Run the dev setup with:
