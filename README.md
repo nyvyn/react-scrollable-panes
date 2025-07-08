@@ -68,6 +68,7 @@ npm dev
 |-------------|-----------------------|---------|----------------------------------------|
 | `paneData`  | `SlipStackPaneData[]` | –       | Panes shown when the component mounts. |
 | `paneWidth` | `number`              | `380`   | Maximum width of each pane.            |
+| `tabWidth`  | `number`              | `40`    | Maximum width of each tab.             |
 
 ### `SlipStackPaneData`
 
