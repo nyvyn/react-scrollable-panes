@@ -82,6 +82,13 @@ interface SlipStackPaneData {
 }
 ```
 
+### `SlipStackPaneRenderer`
+```ts
+type SlipStackPaneRenderer = (args: {
+  openPane: (next: SlipStackPaneData) => void;
+}) => ReactNode;
+```
+
 ### SlipStackHandle
 Returned when you attach `ref` to the container.
 
@@ -112,7 +119,7 @@ npm test
 
 ## Acknowledgements
 
-This project’s horizontally tiled-pane interaction model is inspired by
+This project’s horizontally stacking interaction model is inspired by
 [Andy Matuschak’s working notes](https://notes.andymatuschak.org).
 
 ## License
