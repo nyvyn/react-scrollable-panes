@@ -86,6 +86,7 @@ interface SlipStackPaneData {
 ```ts
 type SlipStackPaneRenderer = (args: {
   openPane: (next: SlipStackPaneData) => void;
+  closePane: (id: string) => void;
 }) => ReactNode;
 ```
 
