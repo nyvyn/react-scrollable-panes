@@ -82,13 +82,6 @@ interface SlipStackPaneData {
 }
 ```
 
-### `SlipStackPaneRenderer`
-```ts
-type SlipStackPaneRenderer = (args: {
-  openPane: (next: SlipStackPaneData) => void;
-}) => ReactNode;
-```
-
 ### SlipStackHandle
 Returned when you attach `ref` to the container.
 
