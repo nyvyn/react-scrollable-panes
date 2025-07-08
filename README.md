@@ -1,6 +1,8 @@
 # SlipStack
 Beautiful, sliding, stacking panes for React.
 
+![SlipStack in action](slipstack-react.gif)
+
 ## Installation
 ```bash
 npm i slipstack-react
